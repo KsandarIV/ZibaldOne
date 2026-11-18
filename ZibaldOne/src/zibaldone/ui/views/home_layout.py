@@ -62,14 +62,11 @@ def arrange(
     keys = [key for key, _ in entries]
     blocks = dict(entries)
     _drop_crescent(ctx)  # a redraw: the old crescent is stale
-    dragging = {"id": 0, "boxes": {}}
+    dragging = {"id": 0}
 
     def settle() -> None:
         dragging["id"] += 1  # the timers of the drag that just ended stop here
         _drop_crescent(ctx)
-        for box in dragging["boxes"].values():
-            box.opacity = 1
-            ctx.update(box)
 
     def place(moving: str, order: List[str]) -> None:
         settle()
@@ -116,26 +113,21 @@ def arrange(
         ctx.page.overlay.append(crescent)
         ctx.update()
 
-    def lifted(box: ft.Control) -> Callable[[Any], None]:
-        def start(_: Any) -> None:
-            box.opacity = 0.3  # the block turns see-through while it moves
-            ctx.update(box)
-            if off is None or ctx.page is None or not hasattr(ctx.page, "run_task"):
-                return
-            dragging["id"] += 1
-            mine = dragging["id"]
+    def lifted(_: Any) -> None:
+        if off is None or ctx.page is None or not hasattr(ctx.page, "run_task"):
+            return
+        dragging["id"] += 1
+        mine = dragging["id"]
 
-            async def hold() -> None:
-                await asyncio.sleep(HOLD_SECONDS)
-                if dragging["id"] == mine:
-                    show_crescent()
-                await asyncio.sleep(DRAG_TIMEOUT)
-                if dragging["id"] == mine:
-                    settle()
+        async def hold() -> None:
+            await asyncio.sleep(HOLD_SECONDS)
+            if dragging["id"] == mine:
+                show_crescent()
+            await asyncio.sleep(DRAG_TIMEOUT)
+            if dragging["id"] == mine:
+                settle()
 
-            ctx.page.run_task(hold)
-
-        return start
+        ctx.page.run_task(hold)
 
     def card(key: str, faded: bool) -> ft.Control:
         label = ft.Row(
@@ -144,11 +136,24 @@ def arrange(
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
         grip = ft.Container(label, padding=ft.Padding.symmetric(horizontal=10, vertical=2), bgcolor=T.PANEL, border_radius=T.RADIUS_SMALL)
-        box = ft.Container(blocks[key], animate_opacity=150) if not faded else ft.Container(opacity=0.45)
-        dragging["boxes"][key] = box
-        whole = ft.Column([grip] + ([box] if not faded else []), spacing=6)
+        whole = ft.Column([grip] + ([blocks[key]] if not faded else []), spacing=6)
+        # While it moves the block's place shows a see-through ghost; Flet puts the block back by itself at the drop or when the drag is cancelled (KAN-127).
+        ghost = ft.Container(
+            W.body(label_of(key, view_names), size=13, dim=True),
+            padding=ft.Padding.symmetric(horizontal=10, vertical=8),
+            bgcolor=W.fade(T.PANEL, 0.3),
+            border=ft.Border.all(1, W.fade(T.TEXT_DIM, 0.4)),
+            border_radius=T.RADIUS_SMALL,
+            alignment=ft.Alignment.TOP_LEFT,
+        )
+
+        def measured(event: Any) -> None:
+            ghost.height = event.height  # the ghost keeps the block's height, so nothing jumps
+            ctx.update(ghost)
+
+        whole.on_size_change = measured
         feedback = ft.Container(W.body(label_of(key, view_names), size=13), padding=10, bgcolor=T.PANEL, border_radius=T.RADIUS_SMALL, opacity=0.6)
-        return ft.Draggable(group=GROUP, data=key, content=whole, content_feedback=feedback, on_drag_start=lifted(box) if not faded else None)
+        return ft.Draggable(group=GROUP, data=key, content=whole, content_feedback=feedback, content_when_dragging=ghost, on_drag_start=lifted if not faded else None)
 
     active = ft.Column(
         [ft.DragTarget(group=GROUP, on_accept=dropped(key), content=card(key, False), data=key) for key in keys]
