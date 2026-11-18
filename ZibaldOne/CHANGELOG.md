@@ -3,6 +3,8 @@
 Tutte le modifiche rilevanti di ZibaldOne. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), versioni [SemVer](https://semver.org/lang/it/).
 
 ## [Unreleased]
+### Cambiato
+- Flet 1.1.2 e i pacchetti `flet-permission-handler`, `flet-secure-storage` e `flet-local-auth` alla stessa versione 1.1.2: con versioni diverse pip non trova un insieme compatibile e la build dell'APK fallisce.
 
 ## [0.3.3.2] — 2026-11-18
 Mini patch: le correzioni dopo la prova della 0.3.3 sul telefono.
