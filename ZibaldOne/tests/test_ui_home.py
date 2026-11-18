@@ -202,3 +202,23 @@ def test_kosmesis_changes_the_icon(base: Path) -> None:  # noqa: F811
     assert len(tiles) == 4 and services.app_icon(base) == "C"
     tiles[3].on_click(SimpleNamespace(control=tiles[3]))  # D
     assert services.app_icon(base) == "D"
+
+
+def test_kosmesis_block_in_hand_leaves_a_ghost_and_never_stays_see_through(base: Path, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    """KAN-127: the block's place shows a ghost only while it is dragged; the block itself is never dimmed."""
+    from zibaldone.ui.views import home_layout
+
+    monkeypatch.setattr(home_layout, "HOLD_SECONDS", 0)
+    monkeypatch.setattr(home_layout, "DRAG_TIMEOUT", 0)
+    page = FakePage()
+    page.overlay = []
+    shell = Shell(page, base)
+    shell.start("/organon/personalizza")
+    cards = [item for item in walk(shell.body.content) if isinstance(item, ft.Draggable) and item.on_drag_start is not None]
+    assert cards and all(card.content_when_dragging is not None for card in cards)
+    card = cards[0]
+    card.content.on_size_change(SimpleNamespace(width=300, height=180))
+    assert card.content_when_dragging.height == 180  # the ghost keeps the block's height
+    card.on_drag_start(None)
+    assert all(getattr(item, "opacity", None) in (None, 1) for item in walk(card.content))
+    assert page.overlay == []  # the drag timed out: nothing left on the page
