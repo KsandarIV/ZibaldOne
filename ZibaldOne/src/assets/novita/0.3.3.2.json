@@ -1,0 +1,11 @@
+{
+  "versione": "0.3.3.2",
+  "data": "2026-11-18",
+  "titolo": "Correzioni dopo la prova sul telefono",
+  "voci": [
+    { "tipo": "corretto", "testo": "Mnemosyne su Android chiede «Accesso a tutti i file» e, se la cartella dei backup non è scrivibile, ti dice quale permesso dare." },
+    { "tipo": "corretto", "testo": "Modelli: niente più rotellina e il titolo è «Oikos • Home»." },
+    { "tipo": "corretto", "testo": "Hegy e Leopy sono senza ramo e ben centrate. Le mascotte hanno un verso: tre guardano a destra, tre a sinistra, due di fronte." },
+    { "tipo": "corretto", "testo": "Kosmesis non ti riporta più in cima a ogni modifica." }
+  ]
+}

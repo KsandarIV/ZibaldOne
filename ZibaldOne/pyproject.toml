@@ -18,14 +18,14 @@ notifiche = [
 ]
 # Flet is pinned: with a different flet-desktop, Flet 1.0.4 would pip-install it by itself at start.
 ui = [
-  "flet[desktop]==1.1.2",
+  "flet[desktop]==1.0.5",
 ]
 web = [
-  "flet[web]==1.1.2",
+  "flet[web]==1.0.5",
 ]
 # `flet build apk` (docs/sviluppo/rilascio-android.md): Flutter and the Android SDK come by themselves.
 build = [
-  "flet[cli]==1.1.2",
+  "flet[cli]==1.0.5",
 ]
 
 [project.scripts]
@@ -65,7 +65,7 @@ module = "main"
 # KAN-107: the key of the encrypted database stays in the system keystore; KAN-108: fingerprint or face open it;
 # KAN-12: pyjnius reaches Android's download manager and installer for the new APK (not pinned, as in the Flet docs:
 # the build takes the one Flet ships for its Python)
-dependencies = ["flet==1.1.2", "flet-permission-handler==1.0.5", "flet-secure-storage==1.0.5", "flet-local-auth==1.0.5", "pyjnius"]
+dependencies = ["flet==1.0.5", "flet-permission-handler==1.0.5", "flet-secure-storage==1.0.5", "flet-local-auth==1.0.5", "pyjnius"]
 
 [tool.flet.android.permission]
 "android.permission.INTERNET" = true
@@ -79,7 +79,7 @@ dependencies = ["flet==1.1.2", "flet-permission-handler==1.0.5", "flet-secure-st
 "android.permission.REQUEST_INSTALL_PACKAGES" = true
 
 [tool.flet.windows]
-dependencies = ["flet==1.1.2", "flet-secure-storage==1.0.5", "flet-local-auth==1.0.5"]
+dependencies = ["flet==1.0.5", "flet-secure-storage==1.0.5", "flet-local-auth==1.0.5"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
