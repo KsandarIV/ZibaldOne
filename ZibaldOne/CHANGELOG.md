@@ -6,6 +6,17 @@ Tutte le modifiche rilevanti di ZibaldOne. Formato ispirato a [Keep a Changelog]
 ### Cambiato
 - Flet 1.1.2 e i pacchetti `flet-permission-handler`, `flet-secure-storage` e `flet-local-auth` alla stessa versione 1.1.2: con versioni diverse pip non trova un insieme compatibile e la build dell'APK fallisce.
 
+## [0.3.3.2] — 2026-11-18
+Mini patch: le correzioni dopo la prova della 0.3.3 sul telefono.
+### Corretto
+- Mnemosyne: su Android chiede «Accesso a tutti i file» e riprova se la cartella dei backup non è scrivibile; se manca il permesso, l'errore dice quale dare (KAN-134, KAN-135).
+- Modelli: tolta la rotellina e il titolo è «Oikos • Home» (KAN-122, KAN-123).
+- Hegy e Leopy senza ramo e ben centrate (KAN-125).
+- Kosmesis non torna più in cima a ogni modifica (KAN-126).
+- Mascotte orientate: tre a destra, tre a sinistra, due frontali (KAN-130).
+### Cambiato
+- Resta Flet 1.0.5: l'aggiornamento a Flet 1.1.2 (dependabot) non è compatibile con i pacchetti `flet-*` 1.0.x e avrebbe rotto di nuovo la build dell'APK. La versione di `actions/setup-java` per la release passa alla 5.
+
 ## [0.3.3.1] — 2026-11-05
 Mini patch: l'APK della 0.3.3 non si era costruito.
 ### Corretto
