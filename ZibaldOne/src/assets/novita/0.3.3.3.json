@@ -1,0 +1,10 @@
+{
+  "versione": "0.3.3.3",
+  "data": "2026-11-20",
+  "titolo": "Spostare i riquadri della home",
+  "voci": [
+    { "tipo": "migliorato", "testo": "In Kosmesis e in Oikos home torna il lucchetto: chiuso, la pagina scorre come sempre; aperto, prendi un riquadro intero e lo sposti subito, col dito o col mouse, senza tenerlo premuto." },
+    { "tipo": "migliorato", "testo": "Mentre sposti un riquadro, la pagina scorre da sola quando il dito arriva nella parte alta o bassa dello schermo, e si ferma quando ne esci." },
+    { "tipo": "migliorato", "testo": "La crocetta per nascondere un riquadro compare solo con il lucchetto aperto." }
+  ]
+}
