@@ -1,4 +1,4 @@
-# ZibaldOne: una release sola per ogni versione, con terminale (wheel), Windows (zip) e Android (APK).
+# ZibaldOne: una release sola per ogni versione, con Windows (zip) e Android (APK); la wheel del terminale è solo provata, non pubblicata.
 # Parte in tre modi:
 #  - merge su main: se la versione nel codice non ha ancora il tag, costruisce tutto e, se tutto passa,
 #    crea il tag `zibaldone-vX.Y.Z` e la release (è il merge della PR `release/X.Y.Z`, sì di Alex al tag).
@@ -135,14 +135,6 @@ jobs:
           python -m build
           pip install dist/*.whl
           zbone --help
-      - uses: actions/upload-artifact@v4
-        with:
-          name: terminal
-          path: |
-            ZibaldOne/dist/*.whl
-            ZibaldOne/dist/*.tar.gz
-          if-no-files-found: error
-          retention-days: 7
 
   windows:
     name: Windows (zip)
@@ -295,8 +287,8 @@ jobs:
           RESULTS: terminale=${{ needs.terminal.result }} windows=${{ needs.windows.result }} android=${{ needs.android.result }}
         run: |
           cd files
-          sha256sum * > SHA256SUMS
-          cat SHA256SUMS
+          # Le somme restano nel log: sulla release vanno solo lo zip di Windows e l'APK.
+          sha256sum *
           for r in $RESULTS; do case "$r" in *=success) ;; *) echo "::warning::confezione non riuscita, la release esce senza: $r";; esac; done
           cd ..
           # Le release restano "prerelease" fino alla prima versione stabile (1.0).
