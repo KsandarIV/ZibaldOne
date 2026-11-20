@@ -33,3 +33,5 @@ py scripts/release.py patch --push
 - Una capacità nuova per versione, descritta nel CHANGELOG sotto `[Unreleased]` mentre ci si lavora.
 - Un test (`tests/test_release.py`) controlla che la versione corrente abbia la sua sezione nel CHANGELOG e la sua nota in `docs/versioni/`, e il suo file `src/assets/novita/<versione>.json` (versione, data, titolo, voci con tipo nuovo/migliorato/corretto) per il pulsante «Novità».
 - Il database ha un suo numero di schema (`PRAGMA user_version`), indipendente dalla versione dell'app: cambia solo quando serve una migrazione.
+
+**Regola per le note (`novita/<versione>.json` e `docs/versioni/vX.Y.Z.md`, che è il testo della GitHub Release):** solo ciò che l'utente vede o deve fare, in parole sue, una riga per voce. Mai mascotte, nomi di schede, criteri di accettazione, «non verificato», dipendenze o altro processo interno.
