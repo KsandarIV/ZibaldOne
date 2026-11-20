@@ -205,7 +205,7 @@ class Shell:
         offset = W.SCROLL["pixels"]
         self.show(self.current)
         page, control = self.page, self.body.content
-        if offset <= 0 or not hasattr(page, "run_task") or not isinstance(control, ft.Column):
+        if offset <= 0 or not hasattr(page, "run_task") or not isinstance(control, (ft.Column, ft.ListView)):  # a ListView: the pages with blocks to put in order
             return
 
         async def restore() -> None:
