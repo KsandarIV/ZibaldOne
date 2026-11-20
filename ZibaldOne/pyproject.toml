@@ -61,11 +61,16 @@ icon_background = "#0D0E15"
 path = "src"
 module = "main"
 
+# KAN-133: our own Flet extension (extensions/zibaldone_riordina): the reorderable list of the open lock scrolls
+# by itself when the finger is in the top or bottom fifth. Not on PyPI: `flet build` installs it from this folder.
+[tool.flet.dev_packages]
+zibaldone-riordina = "extensions/zibaldone_riordina"
+
 [tool.flet.android]
 # KAN-107: the key of the encrypted database stays in the system keystore; KAN-108: fingerprint or face open it;
 # KAN-12: pyjnius reaches Android's download manager and installer for the new APK (not pinned, as in the Flet docs:
 # the build takes the one Flet ships for its Python)
-dependencies = ["flet==1.1.2", "flet-permission-handler==1.1.2", "flet-secure-storage==1.1.2", "flet-local-auth==1.1.2", "pyjnius"]
+dependencies = ["flet==1.1.2", "flet-permission-handler==1.1.2", "flet-secure-storage==1.1.2", "flet-local-auth==1.1.2", "pyjnius", "zibaldone-riordina"]
 
 [tool.flet.android.permission]
 "android.permission.INTERNET" = true
@@ -79,7 +84,7 @@ dependencies = ["flet==1.1.2", "flet-permission-handler==1.1.2", "flet-secure-st
 "android.permission.REQUEST_INSTALL_PACKAGES" = true
 
 [tool.flet.windows]
-dependencies = ["flet==1.1.2", "flet-secure-storage==1.1.2", "flet-local-auth==1.1.2"]
+dependencies = ["flet==1.1.2", "flet-secure-storage==1.1.2", "flet-local-auth==1.1.2", "zibaldone-riordina"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

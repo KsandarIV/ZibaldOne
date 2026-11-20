@@ -187,6 +187,16 @@ def _side_margin(page_width: float, wide: bool) -> float:
     return side + page_width * (12 - columns) / 24
 
 
+def _sortable_list() -> type:
+    """The list of the builds, which scrolls in the top and bottom fifth (KAN-133), or Flet's own: only `flet build`
+    installs zibaldone_riordina, with its Flutter half (pyproject [tool.flet.*].dependencies)."""
+    try:
+        from zibaldone_riordina import ListaRiordino
+    except ImportError:
+        return ft.ReorderableListView
+    return ListaRiordino
+
+
 def sortable_screen(
     head: Sequence[ft.Control],
     items: Sequence[Tuple[str, ft.Control]],
@@ -198,8 +208,9 @@ def sortable_screen(
     """A scrolling page with a list in the middle that the user puts in order: shown only with the lock open (KAN-132/133).
 
     The whole item is its own invisible handle: the mouse or the finger takes it at once, and its buttons still answer
-    a click. The others make room as it passes, and the page scrolls by itself near the edges. `moved(old, new)` gets
-    the positions after the drop.
+    a click. The others make room as it passes, and the page scrolls by itself near the edges: in the builds (APK,
+    Windows) as soon as the finger or the mouse is in the top or bottom fifth of the list (zibaldone_riordina);
+    elsewhere when the block reaches the edge. `moved(old, new)` gets the positions after the drop.
     """
     SCROLL["pixels"] = 0.0
     side = _side_margin(page_width, wide) if page_width else (28 if wide else 16)
@@ -210,7 +221,7 @@ def sortable_screen(
     def item(key: str, control: ft.Control) -> ft.Control:
         return ft.Container(ft.ReorderableDragHandle(control, mouse_cursor=ft.MouseCursor.GRAB), key=key, padding=ft.Padding.only(left=side, right=side, bottom=14))
 
-    return ft.ReorderableListView(
+    return _sortable_list()(
         controls=[item(key, control) for key, control in items],
         header=holder(head, 20 if wide else 12, 14),
         footer=holder(tail, 0, 40),

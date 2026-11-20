@@ -1,0 +1,14 @@
+name: zibaldone_riordina
+description: ZibaldOne, lista da riordinare che scorre da sola nella fascia alta e bassa.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # `flet build` sets the flet package of the app itself (dependency_overrides)
+  flet: ">=1.0.5 <2.0.0"
