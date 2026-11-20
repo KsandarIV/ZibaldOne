@@ -68,7 +68,9 @@ def mode_choices(status: Any) -> List[ModeChoice]:
     signed_in = bool(getattr(status, "signed_in", False))
     drive = bool(getattr(status, "drive_allowed", False))
     email = getattr(status, "email", None) or ""
-    if not signed_in:
+    if not signed_in and not getattr(status, "google_configured", False):
+        google_hint = "non ancora disponibile: l'accesso con Google arriverà in una versione futura"
+    elif not signed_in:
         google_hint = "prima entra con Google, qui sopra"
     elif not drive:
         google_hint = "all'accesso non hai dato il permesso per Drive: esci e rientra lasciando la casella spuntata"
@@ -98,7 +100,7 @@ def cloud_lines(status: Any, encryption_on: bool) -> List[Tuple[str, str]]:
     elif getattr(status, "google_configured", False):
         lines.append(("Account", "non sei entrato"))
     else:
-        lines.append(("Account", "nessuno: l'accesso con Google non è configurato in questa copia, funziona tutto in locale"))
+        lines.append(("Account", "nessuno: funziona tutto in locale, l'accesso con Google arriverà in una versione futura"))
     mode = getattr(status, "mode", "local")
     lines.append(("Copie", str(getattr(status, "mode_label", None) or mode)))
     if mode == "folder" and getattr(status, "folder_path", None):

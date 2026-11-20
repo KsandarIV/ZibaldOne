@@ -156,16 +156,6 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -e ".[build]"
-      - name: Client OAuth di Google
-        env:
-          GOOGLE_CLIENT_JSON: ${{ secrets.GOOGLE_CLIENT_JSON }}
-        run: |
-          if [ -n "$GOOGLE_CLIENT_JSON" ]; then
-            printf '%s' "$GOOGLE_CLIENT_JSON" > src/zibaldone/cloud/google_client.json
-            python -c "import json; json.load(open('src/zibaldone/cloud/google_client.json'))"
-          else
-            echo "::warning::manca il segreto GOOGLE_CLIENT_JSON: l'app funziona, ma senza accesso con Google"
-          fi
       - name: Costruisci l'app per Windows
         env:
           VERSION: ${{ needs.check.outputs.version }}
@@ -210,16 +200,6 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -e ".[build]"
-      - name: Client OAuth di Google
-        env:
-          GOOGLE_CLIENT_JSON: ${{ secrets.GOOGLE_CLIENT_JSON }}
-        run: |
-          if [ -n "$GOOGLE_CLIENT_JSON" ]; then
-            printf '%s' "$GOOGLE_CLIENT_JSON" > src/zibaldone/cloud/google_client.json
-            python -c "import json; json.load(open('src/zibaldone/cloud/google_client.json'))"
-          else
-            echo "::warning::manca il segreto GOOGLE_CLIENT_JSON: l'APK funziona, ma senza accesso con Google"
-          fi
       - name: Chiave di firma
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
