@@ -105,8 +105,7 @@ def build(ctx: AppContext, route: Route) -> ft.Control:
     moved: Any = None
     tail: List[ft.Control] = []
     if unlocked:
-        how = "tieni premuto un riquadro e spostalo" if W.is_touch(ctx.page) else "trascina un riquadro col mouse"
-        controls.append(ft.Row([W.caption(f"Sbloccata: {how}; la crocetta lo nasconde."), lock], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+        controls.append(ft.Row([W.caption("Sbloccata: trascina un riquadro per spostarlo, la crocetta lo nasconde."), lock], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
         entries = [(key, block) for key in shown for block in [_tile(ctx, key, model, tiles)] if block is not None]
         empty[:] = [key for key in shown if key not in dict(entries)]
         blocks, moved = home_layout.sortable(entries, view_names, save, remove=lambda key: save([item for item in shown if item != key]))
@@ -128,7 +127,7 @@ def build(ctx: AppContext, route: Route) -> ft.Control:
     else:
         tail.append(W.empty_state("Nessuna voce oggi, per ora. Quando vuoi, il tuo zibaldone è qui.", "EDIT_NOTE"))
     if unlocked:
-        return W.sortable_screen(controls, blocks, tail, ctx.wide, moved, W.is_touch(ctx.page), float(getattr(ctx.page, "width", 0) or 0))
+        return W.sortable_screen(controls, blocks, tail, ctx.wide, moved, float(getattr(ctx.page, "width", 0) or 0))
     return W.screen(controls + tail, ctx.wide)
 
 

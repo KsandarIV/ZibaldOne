@@ -76,4 +76,6 @@ def build(ctx: AppContext) -> ft.Control:
         W.section_label("La home", "Oikos"),
     ]
     head, blocks, moved, tail = home_layout.build(ctx)
-    return W.sortable_screen(controls + head, blocks, tail, ctx.wide, moved, W.is_touch(ctx.page), float(getattr(ctx.page, "width", 0) or 0))
+    if moved is None:  # the lock is closed: a normal page
+        return W.screen(controls + head + tail, ctx.wide)
+    return W.sortable_screen(controls + head, blocks, tail, ctx.wide, moved, float(getattr(ctx.page, "width", 0) or 0))

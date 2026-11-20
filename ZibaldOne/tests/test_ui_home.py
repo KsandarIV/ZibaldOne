@@ -100,11 +100,16 @@ def drop(root, moving: str, target: str) -> None:
     sorter(root).on_reorder(SimpleNamespace(old_index=old, new_index=new))
 
 
+def unlock(shell) -> None:
+    click(next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Sblocca per spostare i riquadri"))
+
+
 def test_home_settings_drag_to_reorder_hide_show_reset(base: Path) -> None:  # noqa: F811
     shell = Shell(FakePage(), base)
     shell.start("/organon/personalizza")
     assert home_log.load_layout(base) == list(home.TILES)
     assert "LA HOME" in texts(shell.body.content) and "I TRE MOMENTI" in texts(shell.body.content)  # Oikos lives in Kosmesis, with the real blocks
+    unlock(shell)
     drop(shell.body.content, "citazione", "promemoria")  # «citazione» goes above «promemoria»
     assert home_log.load_layout(base)[:2] == ["citazione", "promemoria"]
     switches = [item for item in walk(shell.body.content) if isinstance(item, ft.Switch)]
@@ -186,6 +191,7 @@ def test_kosmesis_changes_accent_and_background(base: Path) -> None:  # noqa: F8
 def test_kosmesis_hides_a_block_with_its_cross_and_moves_it_to_the_end(base: Path) -> None:  # noqa: F811
     shell = Shell(FakePage(), base)
     shell.start("/organon/personalizza")
+    unlock(shell)
     hide = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Nascondi da Oikos home")
     click(hide)  # the ✕ of the first block that can be hidden
     hidden = list(home.TILES)[0]  # in Kosmesis every block has its cross, the fixed ones too
@@ -195,21 +201,23 @@ def test_kosmesis_hides_a_block_with_its_cross_and_moves_it_to_the_end(base: Pat
     assert home_log.load_layout(base) == layout[1:] + layout[:1]
 
 
-def test_kosmesis_moves_the_whole_block_with_the_mouse_on_pc_and_after_a_hold_on_the_phone(base: Path) -> None:  # noqa: F811
-    """KAN-132/133: on the PC the whole block is its own handle (no hold); on the phone Flutter waits for a long press, so a swipe scrolls."""
-    shell = Shell(FakePage(), base)
-    shell.start("/organon/personalizza")
-    pc = sorter(shell.body.content)
-    assert pc.show_default_drag_handles is False
-    assert all(isinstance(item.content, ft.ReorderableDragHandle) for item in pc.controls)  # the handle is the whole block
-    assert [item.key for item in pc.controls] == home_log.load_layout(base)
-    phone = FakePage(width=412)
-    phone.platform = SimpleNamespace(is_mobile=lambda: True)
-    shell = Shell(phone, base)
-    shell.start("/organon/personalizza")
-    touch = sorter(shell.body.content)
-    assert touch.show_default_drag_handles is True and not any(isinstance(item, ft.ReorderableDragHandle) for item in walk(touch))
-    assert any("tieni premuto un riquadro" in text for text in texts(shell.body.content))
+def test_kosmesis_lock_keeps_the_page_still_and_opens_to_drag_whole_blocks(base: Path) -> None:  # noqa: F811
+    """KAN-132/133: locked, a normal page; unlocked, every block is its own handle, the same with mouse and finger (no hold)."""
+    for page in (FakePage(), FakePage(width=412)):
+        shell = Shell(page, base)
+        shell.start("/organon/personalizza")
+        root = shell.body.content
+        assert isinstance(root, ft.Column) and not any(isinstance(item, ft.ReorderableListView) for item in walk(root))
+        assert not any(isinstance(item, ft.IconButton) and item.tooltip == "Nascondi da Oikos home" for item in walk(root))  # the cross only when unlocked
+        assert "I TRE MOMENTI" in texts(root)  # the real blocks are still shown
+        unlock(shell)
+        sortable = sorter(shell.body.content)
+        assert sortable.show_default_drag_handles is False
+        assert all(isinstance(item.content, ft.ReorderableDragHandle) for item in sortable.controls)  # the handle is the whole block
+        assert [item.key for item in sortable.controls] == home_log.load_layout(base)
+        assert any(isinstance(item, ft.IconButton) and item.tooltip == "Nascondi da Oikos home" for item in walk(sortable))
+        click(next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Blocca i riquadri"))
+        assert not any(isinstance(item, ft.ReorderableListView) for item in walk(shell.body.content))
 
 
 def test_kosmesis_changes_the_icon(base: Path) -> None:  # noqa: F811

@@ -1,6 +1,6 @@
 """Kosmesis · Oikos (0.2.8, moved here in 0.3.3): which tiles Oggi shows, and in what order (moved by hand since 0.3.3.2, KAN-132/133)."""
 
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import flet as ft
 
@@ -11,6 +11,8 @@ from zibaldone.core import views as V
 from zibaldone.ui import theme as T
 from zibaldone.ui import widgets as W
 from zibaldone.ui.context import AppContext
+
+ARRANGE_KEY = "kosmesis_riordina"  # ctx.memory: the lock of the Oikos blocks is open
 
 LABELS: Dict[str, str] = {
     "promemoria": "Promemoria",
@@ -29,6 +31,14 @@ def label_of(key: str, view_names: Dict[str, str]) -> str:
     return LABELS.get(key, key)
 
 
+def labelled(key: str, block: ft.Control, view_names: Dict[str, str], hide: Any = None) -> ft.Control:
+    """A block under a strip with its name; with the lock open the strip shows the grip and the cross that hides it."""
+    open_ = hide is not None
+    head = ([ft.Icon(W.icon_of("DRAG_INDICATOR"), size=20, color=T.TEXT_DIM)] if open_ else []) + [W.body(label_of(key, view_names), size=13, expand=True)] + ([hide] if open_ else [])
+    strip = ft.Container(ft.Row(head, vertical_alignment=ft.CrossAxisAlignment.CENTER), padding=ft.Padding.symmetric(horizontal=10, vertical=2 if open_ else 10), bgcolor=T.PANEL, border_radius=T.RADIUS_SMALL)
+    return ft.Column([strip, block], spacing=6)
+
+
 def sortable(
     entries: List[Tuple[str, ft.Control]],
     view_names: Dict[str, str],
@@ -38,17 +48,16 @@ def sortable(
 ) -> Tuple[List[Tuple[str, ft.Control]], Callable[[int, int], None]]:
     """The blocks as they look, for `W.sortable_screen`, and what to do when one is moved.
 
-    The whole block is what moves (KAN-133): on the PC it follows the mouse at once, on the phone it is held first, so a quick swipe still scrolls (KAN-132).
+    Used only with the lock open: then the whole block is what moves (KAN-133), at once, with the mouse or the finger; with the lock closed the page
+    scrolls and selects as usual (KAN-132).
     The cross on a block hides it (it comes back from «Accendi e spegni» in Kosmesis); `kept` blocks have none (on Oggi the fixed ones: only Kosmesis
     switches them off), and neither has the last block, so Oggi never stays empty.
     """
     keys = [key for key, _ in entries]
 
     def card(key: str, block: ft.Control) -> ft.Control:
-        hide = [W.icon_button("CLOSE", lambda _, key=key: remove(key), "Nascondi da Oikos home", color=T.TEXT_DIM)] if key not in kept and len(keys) > 1 else []
-        label = ft.Row([ft.Icon(W.icon_of("DRAG_INDICATOR"), size=20, color=T.TEXT_DIM), W.body(label_of(key, view_names), size=13, expand=True)] + hide, vertical_alignment=ft.CrossAxisAlignment.CENTER)
-        grip = ft.Container(label, padding=ft.Padding.symmetric(horizontal=10, vertical=2), bgcolor=T.PANEL, border_radius=T.RADIUS_SMALL)
-        return ft.Column([grip, block], spacing=6)
+        hide = W.icon_button("CLOSE", lambda _, key=key: remove(key), "Nascondi da Oikos home", color=T.TEXT_DIM) if key not in kept and len(keys) > 1 else None
+        return labelled(key, block, view_names, hide)
 
     def moved(old: int, new: int) -> None:
         if old == new or not 0 <= old < len(keys):
@@ -60,8 +69,11 @@ def sortable(
     return [(key, card(key, block)) for key, block in entries], moved
 
 
-def build(ctx: AppContext) -> Tuple[List[ft.Control], List[Tuple[str, ft.Control]], Callable[[int, int], None], List[ft.Control]]:
-    """The Oikos section of Kosmesis, for `W.sortable_screen`: what goes above the blocks, the blocks, what to do when one moves, what goes below."""
+def build(ctx: AppContext) -> Tuple[List[ft.Control], List[Tuple[str, ft.Control]], Optional[Callable[[int, int], None]], List[ft.Control]]:
+    """The Oikos section of Kosmesis: what goes above the blocks, the blocks to put in order, what to do when one moves, what goes below.
+
+    With the lock closed (the default) there is nothing to put in order: the blocks are in the part above, and the page is a normal one.
+    """
     with ctx.store() as store:
         view_names = {item.id: item.name for item in V.load_views(store)} if store.find_template(V.TEMPLATE) is not None else {}
     shown = [key for key in home_log.load_layout(ctx.folder) if not key.startswith("vista:") or key.split(":", 1)[1] in view_names]
@@ -85,9 +97,24 @@ def build(ctx: AppContext) -> Tuple[List[ft.Control], List[Tuple[str, ft.Control
     from zibaldone.ui.views import today  # here, not on top: Oggi imports this module
 
     entries, _ = today.preview_entries(ctx)
-    how = "tieni premuto un riquadro e spostalo" if W.is_touch(ctx.page) else "trascina un riquadro col mouse"
-    head: List[ft.Control] = [W.caption(f"Così è la tua home, con i riquadri veri: {how}. La crocetta lo nasconde; lo riaccendi qui sotto. «Le voci di oggi» restano sempre in fondo.")]
-    blocks, moved = sortable(entries, view_names, save, lambda key: save([item for item in shown if item != key]), kept=())
+    unlocked = bool(ctx.memory.get(ARRANGE_KEY))
+
+    def toggle_lock(_: Any) -> None:
+        ctx.memory[ARRANGE_KEY] = not unlocked
+        ctx.refresh_keep_scroll()
+
+    lock = W.icon_button("LOCK_OPEN" if unlocked else "LOCK", toggle_lock, "Blocca i riquadri" if unlocked else "Sblocca per spostare i riquadri")
+    say = (
+        "Sbloccata: trascina un riquadro per spostarlo, la crocetta lo nasconde. Richiudi il lucchetto per scorrere la pagina come sempre."
+        if unlocked
+        else "Così è la tua home, con i riquadri veri. Apri il lucchetto per spostarli o nasconderli; «Le voci di oggi» restano sempre in fondo."
+    )
+    head: List[ft.Control] = [ft.Row([ft.Container(W.caption(say), expand=True), lock], vertical_alignment=ft.CrossAxisAlignment.CENTER)]
+    if unlocked:
+        blocks, moved = sortable(entries, view_names, save, lambda key: save([item for item in shown if item != key]), kept=())
+    else:
+        blocks, moved = [], None
+        head += [labelled(key, block, view_names) for key, block in entries]
     tail: List[ft.Control] = [
         W.section_label("Accendi e spegni"),
         W.panel(ft.Column([ft.Row([W.body(label_of(key, view_names), dim=key not in shown, expand=True), switch(key, key in shown)]) for key in offered], spacing=2)),
