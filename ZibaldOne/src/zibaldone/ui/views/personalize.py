@@ -74,6 +74,6 @@ def build(ctx: AppContext) -> ft.Control:
         W.section_label("Icona"),
         W.panel(ft.Column([W.body("L'icona dell'app. Cambia subito quella della finestra; l'icona del collegamento o dell'app installata cambia con la guida «Cambiare l'icona».", dim=True), app_icon.picker(ctx, lambda letter: app_icon.choose(ctx, letter))], spacing=10)),
         W.section_label("La home", "Oikos"),
-        *home_layout.build(ctx),
     ]
-    return W.screen(controls, ctx.wide)
+    head, blocks, moved, tail = home_layout.build(ctx)
+    return W.sortable_screen(controls + head, blocks, tail, ctx.wide, moved, W.is_touch(ctx.page), float(getattr(ctx.page, "width", 0) or 0))

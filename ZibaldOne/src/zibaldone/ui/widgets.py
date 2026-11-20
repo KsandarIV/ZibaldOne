@@ -1,7 +1,7 @@
 """Small building blocks shared by every view, in the ZibaldOne look."""
 
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Sequence
+from typing import Any, Callable, List, Optional, Sequence, Tuple
 
 import flet as ft
 
@@ -174,6 +174,59 @@ SCROLL = {"pixels": 0.0}  # how far the page on screen is scrolled: a redraw tha
 
 def _track_scroll(event: Any) -> None:
     SCROLL["pixels"] = float(getattr(event, "pixels", 0.0) or 0.0)
+
+
+def is_touch(page: Any) -> bool:
+    """A phone or a tablet (Android, iOS): gestures there start with a long press, so a swipe can still scroll."""
+    platform = getattr(page, "platform", None)
+    return bool(platform is not None and platform.is_mobile())
+
+
+def _side_margin(page_width: float, wide: bool) -> float:
+    """The margin that keeps a page as wide as `screen` makes it (T.CONTENT_COLUMNS of 12)."""
+    side = 28 if wide else 16
+    columns = 12
+    for breakpoint, name in ((1400, "xxl"), (1200, "xl"), (992, "lg")):
+        if page_width >= breakpoint:
+            columns = T.CONTENT_COLUMNS.get(name, 12)
+            break
+    return side + page_width * (12 - columns) / 24
+
+
+def sortable_screen(
+    head: Sequence[ft.Control],
+    items: Sequence[Tuple[str, ft.Control]],
+    tail: Sequence[ft.Control],
+    wide: bool,
+    moved: Callable[[int, int], None],
+    touch: bool,
+    page_width: float = 0,
+) -> ft.Control:
+    """A scrolling page with a list in the middle that the user puts in order (KAN-132/133).
+
+    The whole item is what moves. On a phone it is held first, so a quick swipe still scrolls; on the PC the mouse
+    takes it at once (the item is its own invisible handle, its buttons still answer a click). The others make room
+    as it passes, and the page scrolls by itself near the edges. `moved(old, new)` gets the positions after the drop.
+    """
+    SCROLL["pixels"] = 0.0
+    side = _side_margin(page_width, wide) if page_width else (28 if wide else 16)
+
+    def holder(controls: Sequence[ft.Control], top: float, bottom: float) -> ft.Control:
+        return ft.Container(ft.Column(list(controls), spacing=14, horizontal_alignment=ft.CrossAxisAlignment.STRETCH), padding=ft.Padding.only(left=side, right=side, top=top, bottom=bottom))
+
+    def item(key: str, control: ft.Control) -> ft.Control:
+        body = control if touch else ft.ReorderableDragHandle(control, mouse_cursor=ft.MouseCursor.GRAB)
+        return ft.Container(body, key=key, padding=ft.Padding.only(left=side, right=side, bottom=14))
+
+    return ft.ReorderableListView(
+        controls=[item(key, control) for key, control in items],
+        header=holder(head, 20 if wide else 12, 14),
+        footer=holder(tail, 0, 40),
+        show_default_drag_handles=touch,  # phone: Flutter makes the whole item a long-press handle; PC: our own handle above
+        on_reorder=lambda event: moved(event.old_index, event.new_index),
+        on_scroll=_track_scroll,
+        expand=True,
+    )
 
 
 def screen(controls: Sequence[ft.Control], wide: bool) -> ft.Control:

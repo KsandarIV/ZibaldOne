@@ -1246,6 +1246,7 @@ def test_a_change_in_kosmesis_keeps_the_page_where_it_was_scrolled(ready: Path, 
         asked.append(offset)
 
     monkeypatch.setattr(ft.Column, "scroll_to", scroll_to)
+    monkeypatch.setattr(ft.ListView, "scroll_to", scroll_to)  # Kosmesis is a list the blocks are put in order in (KAN-133)
     page_column = shell.body.content
     page_column.on_scroll(SimpleNamespace(pixels=640.0))  # the user has scrolled down
     switch = next(item for item in walk(shell.body.content) if isinstance(item, ft.Switch) and not item.disabled)

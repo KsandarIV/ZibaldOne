@@ -88,10 +88,16 @@ def test_view_tile_and_screens(base: Path) -> None:  # noqa: F811
     assert "VISTA: PERSONE MARCO" not in texts(shell.body.content)
 
 
+def sorter(root) -> ft.ReorderableListView:
+    return next(item for item in walk(root) if isinstance(item, ft.ReorderableListView))
+
+
 def drop(root, moving: str, target: str) -> None:
-    """Drag the handle of `moving` onto the block of `target`, as the device reports it."""
-    zone = next(item for item in walk(root) if isinstance(item, ft.DragTarget) and item.data == target)
-    zone.on_accept(SimpleNamespace(src=SimpleNamespace(data=moving)))
+    """Move the block `moving` right above `target` (or to the end with "__end__"), as Flet reports it: positions after the drop."""
+    keys = [item.key for item in sorter(root).controls]
+    old = keys.index(moving)
+    new = len(keys) - 1 if target == "__end__" else keys.index(target) - (1 if keys.index(target) > old else 0)
+    sorter(root).on_reorder(SimpleNamespace(old_index=old, new_index=new))
 
 
 def test_home_settings_drag_to_reorder_hide_show_reset(base: Path) -> None:  # noqa: F811
@@ -137,15 +143,15 @@ def test_oggi_can_be_reordered_by_dragging_right_there(base: Path) -> None:  # n
     shell.start("/oggi")
     seed(base, shell.ctx.now().date())
     shell.start("/oggi")
-    assert not any(isinstance(item, ft.Draggable) for item in walk(shell.body.content))  # locked by default
+    assert not any(isinstance(item, ft.ReorderableListView) for item in walk(shell.body.content))  # locked by default
     lock = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Sblocca per spostare i riquadri")
     click(lock)
     drop(shell.body.content, "aree", "citazione")  # «aree» goes right above «citazione» («promemoria» has a block only at some hours of the day)
     layout = home_log.load_layout(base)
     assert layout.index("aree") + 1 == layout.index("citazione")
     assert "bilancio" in layout  # no finance pack here: the tile is empty, not on screen, and the reorder must keep it
-    assert any(isinstance(item, ft.Draggable) for item in walk(shell.body.content))  # still unlocked
-    remove = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Togli da Oikos home")
+    assert any(isinstance(item, ft.ReorderableListView) for item in walk(shell.body.content))  # still unlocked
+    remove = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Nascondi da Oikos home")
     before = home_log.load_layout(base)
     click(remove)  # the first block that can be taken away
     after = home_log.load_layout(base)
@@ -154,7 +160,7 @@ def test_oggi_can_be_reordered_by_dragging_right_there(base: Path) -> None:  # n
     click(button(shell.ctx.page.dialogs[-1], "Ricorrenze"))  # the block just taken away is offered again
     assert "ricorrenze" in home_log.load_layout(base)
     click(next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Blocca i riquadri"))
-    assert not any(isinstance(item, ft.Draggable) for item in walk(shell.body.content))
+    assert not any(isinstance(item, ft.ReorderableListView) for item in walk(shell.body.content))
 
 
 def test_kosmesis_changes_accent_and_background(base: Path) -> None:  # noqa: F811
@@ -177,20 +183,33 @@ def test_kosmesis_changes_accent_and_background(base: Path) -> None:  # noqa: F8
         T.apply()
         
         
-def test_kosmesis_switches_blocks_off_and_on_by_dragging(base: Path) -> None:  # noqa: F811
+def test_kosmesis_hides_a_block_with_its_cross_and_moves_it_to_the_end(base: Path) -> None:  # noqa: F811
     shell = Shell(FakePage(), base)
     shell.start("/organon/personalizza")
+    hide = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Nascondi da Oikos home")
+    click(hide)  # the ✕ of the first block that can be hidden
+    hidden = list(home.TILES)[0]  # in Kosmesis every block has its cross, the fixed ones too
+    layout = home_log.load_layout(base)
+    assert hidden not in layout and len(layout) == len(home.TILES) - 1
+    drop(shell.body.content, layout[0], "__end__")
+    assert home_log.load_layout(base) == layout[1:] + layout[:1]
 
-    def zone():
-        return next(item for item in walk(shell.body.content) if isinstance(item, ft.DragTarget) and item.on_accept.__name__ == "switched_off")
 
-    zone().on_accept(SimpleNamespace(src=SimpleNamespace(data="citazione")))  # into «Spenti»
-    assert "citazione" not in home_log.load_layout(base)
-    assert "SPENTI" in texts(shell.body.content)
-    drop(shell.body.content, "citazione", "promemoria")  # out again, above «promemoria»
-    assert home_log.load_layout(base)[:2] == ["citazione", "promemoria"]
-    drop(shell.body.content, "citazione", "__end__")  # to the end of the list
-    assert home_log.load_layout(base)[-1] == "citazione"
+def test_kosmesis_moves_the_whole_block_with_the_mouse_on_pc_and_after_a_hold_on_the_phone(base: Path) -> None:  # noqa: F811
+    """KAN-132/133: on the PC the whole block is its own handle (no hold); on the phone Flutter waits for a long press, so a swipe scrolls."""
+    shell = Shell(FakePage(), base)
+    shell.start("/organon/personalizza")
+    pc = sorter(shell.body.content)
+    assert pc.show_default_drag_handles is False
+    assert all(isinstance(item.content, ft.ReorderableDragHandle) for item in pc.controls)  # the handle is the whole block
+    assert [item.key for item in pc.controls] == home_log.load_layout(base)
+    phone = FakePage(width=412)
+    phone.platform = SimpleNamespace(is_mobile=lambda: True)
+    shell = Shell(phone, base)
+    shell.start("/organon/personalizza")
+    touch = sorter(shell.body.content)
+    assert touch.show_default_drag_handles is True and not any(isinstance(item, ft.ReorderableDragHandle) for item in walk(touch))
+    assert any("tieni premuto un riquadro" in text for text in texts(shell.body.content))
 
 
 def test_kosmesis_changes_the_icon(base: Path) -> None:  # noqa: F811
@@ -202,23 +221,3 @@ def test_kosmesis_changes_the_icon(base: Path) -> None:  # noqa: F811
     assert len(tiles) == 4 and services.app_icon(base) == "C"
     tiles[3].on_click(SimpleNamespace(control=tiles[3]))  # D
     assert services.app_icon(base) == "D"
-
-
-def test_kosmesis_block_in_hand_leaves_a_ghost_and_never_stays_see_through(base: Path, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
-    """KAN-127: the block's place shows a ghost only while it is dragged; the block itself is never dimmed."""
-    from zibaldone.ui.views import home_layout
-
-    monkeypatch.setattr(home_layout, "HOLD_SECONDS", 0)
-    monkeypatch.setattr(home_layout, "DRAG_TIMEOUT", 0)
-    page = FakePage()
-    page.overlay = []
-    shell = Shell(page, base)
-    shell.start("/organon/personalizza")
-    cards = [item for item in walk(shell.body.content) if isinstance(item, ft.Draggable) and item.on_drag_start is not None]
-    assert cards and all(card.content_when_dragging is not None for card in cards)
-    card = cards[0]
-    card.content.on_size_change(SimpleNamespace(width=300, height=180))
-    assert card.content_when_dragging.height == 180  # the ghost keeps the block's height
-    card.on_drag_start(None)
-    assert all(getattr(item, "opacity", None) in (None, 1) for item in walk(card.content))
-    assert page.overlay == []  # the drag timed out: nothing left on the page
