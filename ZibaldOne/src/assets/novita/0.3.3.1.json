@@ -5,7 +5,7 @@
   "voci": [
     {
       "tipo": "corretto",
-      "testo": "Questa versione porta l'app per Android, che nella 0.3.3 non era stata costruita. Per il resto è identica alla 0.3.3."
+      "testo": "Questa versione porta l'app per Android, che nella 0.3.3 non c'era. Per il resto è identica alla 0.3.3."
     }
   ]
 }
