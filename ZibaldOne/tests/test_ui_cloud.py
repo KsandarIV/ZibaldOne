@@ -86,7 +86,8 @@ def test_google_mode_needs_sign_in_and_drive() -> None:
     def google(status):
         return next(choice for choice in cm.mode_choices(status) if choice.mode == "google")
 
-    assert not google(Status()).enabled and "entra con Google" in google(Status()).hint
+    assert not google(Status(google_configured=True)).enabled and "entra con Google" in google(Status(google_configured=True)).hint
+    assert not google(Status()).enabled and "versione futura" in google(Status()).hint  # builds without a Google client
     assert not google(Status(signed_in=True, email="a@b.it")).enabled
     allowed = google(Status(signed_in=True, email="a@b.it", drive_allowed=True))
     assert allowed.enabled and "a@b.it" in allowed.hint
