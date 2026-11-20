@@ -33,7 +33,6 @@ Su GitHub: **Settings → Secrets and variables → Actions → New repository s
 | `ANDROID_KEYSTORE_PASSWORD` | la password della chiave | sì, con la chiave |
 | `ANDROID_KEY_PASSWORD` | la password dell'alias, se diversa | no (usa la precedente) |
 | `ANDROID_KEY_ALIAS` | l'alias, se non è `zibaldone` | no |
-| `GOOGLE_CLIENT_JSON` | il contenuto del file del client OAuth "App desktop" ([google-cloud](google-cloud.md)) | sì, per entrare con Google |
 
 Il file del client non va mai nella repo (è in `.gitignore`): il workflow lo scrive solo durante la build.
 
