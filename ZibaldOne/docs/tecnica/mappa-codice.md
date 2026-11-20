@@ -10,7 +10,7 @@ Generata da `scripts/code_map.py` il 2026-11-20. Si rigenera a ogni PR di rilasc
 - **cloud**: 8 moduli, 1574 righe
 - **notify**: 5 moduli, 643 righe
 - **packs**: 1 moduli, 0 righe
-- **ui**: 48 moduli, 13022 righe
+- **ui**: 48 moduli, 13024 righe
 - **(radice)**: 2 moduli, 6 righe
 
 ## Moduli più usati (import in ingresso)
@@ -25,7 +25,7 @@ Generata da `scripts/code_map.py` il 2026-11-20. Si rigenera a ogni PR di rilasc
 - `zibaldone.core.brand` (20): Brand identity: names, mascots and quotes taken from philosophy.
 - `zibaldone.core.blocks` (20): Block types: the bricks every template is made of.
 - `zibaldone.core.areas` (15): Eudaimonia (0.2.0): the 8 life areas as a concept of the whole app.
-- `zibaldone.storage.paths` (14): Where ZibaldOne keeps the user's data on each platform.
+- `zibaldone.storage.settings` (14): User settings saved as `settings.json` inside the data folder.
 
 ## Moduli più grandi
 - `zibaldone.ui.viewmodels`: 1790 righe
