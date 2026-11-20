@@ -5,7 +5,7 @@
   "voci": [
     {
       "tipo": "nuovo",
-      "testo": "Un modello può stare in più aree: scegli le mascotte nell'editor. Senza area sta in Generale."
+      "testo": "Un modello può stare in più aree: scegli le aree nell'editor. Senza area sta in Generale."
     },
     {
       "tipo": "nuovo",
@@ -25,7 +25,7 @@
     },
     {
       "tipo": "corretto",
-      "testo": "Il tasto indietro non esce più dall'app, le mascotte riempiono la larghezza della home, riccio e lupo ridisegnati."
+      "testo": "Il tasto indietro non esce più dall'app, la home riempie tutta la larghezza."
     }
   ]
 }
