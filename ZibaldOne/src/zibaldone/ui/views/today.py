@@ -1,6 +1,6 @@
 """Oggi · Hic et nunc: the day at a glance."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import flet as ft
 
@@ -101,29 +101,34 @@ def build(ctx: AppContext, route: Route) -> ft.Control:
         ctx.refresh_keep_scroll()
 
     lock = W.icon_button("LOCK_OPEN" if unlocked else "LOCK", toggle_lock, "Blocca i riquadri" if unlocked else "Sblocca per spostare i riquadri")
+    blocks: List[Tuple[str, ft.Control]] = []
+    moved: Any = None
+    tail: List[ft.Control] = []
     if unlocked:
-        controls.append(ft.Row([W.caption("Sbloccata: trascina la maniglia di un riquadro per spostarlo."), lock], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+        controls.append(ft.Row([W.caption("Sbloccata: trascina un riquadro per spostarlo, la crocetta lo nasconde."), lock], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
         entries = [(key, block) for key in shown for block in [_tile(ctx, key, model, tiles)] if block is not None]
         empty[:] = [key for key in shown if key not in dict(entries)]
-        controls.append(home_layout.arrange(ctx, entries, view_names, save, remove=lambda key: save([item for item in shown if item != key])))
+        blocks, moved = home_layout.sortable(entries, view_names, save, remove=lambda key: save([item for item in shown if item != key]))
         offered = [key for key in [*home.TILES, *[f"vista:{view_id}" for view_id in view_names]] if key not in shown]
         if offered:
-            controls.append(W.secondary_button("Aggiungi un riquadro", lambda _: _add_dialog(ctx, offered, view_names, lambda key: save([*shown, key])), icon="ADD"))
+            tail.append(W.secondary_button("Aggiungi un riquadro", lambda _: _add_dialog(ctx, offered, view_names, lambda key: save([*shown, key])), icon="ADD"))
     else:
         controls.append(ft.Row([lock], alignment=ft.MainAxisAlignment.END))
         for key in shown:
             block = _tile(ctx, key, model, tiles)
             if block is not None:
                 controls.append(block)
-    controls.append(W.section_label("Le voci di oggi"))
+    tail.append(W.section_label("Le voci di oggi"))
     if model.entries:
         for row in model.entries:
-            controls.append(
+            tail.append(
                 W.entry_tile(row.title, row.template_name, row.summary, row.icon, row.color, lambda _, entry_id=row.id: ctx.go(f"/voci/{entry_id}"))
             )
     else:
-        controls.append(W.empty_state("Nessuna voce oggi, per ora. Quando vuoi, il tuo zibaldone è qui.", "EDIT_NOTE"))
-    return W.screen(controls, ctx.wide)
+        tail.append(W.empty_state("Nessuna voce oggi, per ora. Quando vuoi, il tuo zibaldone è qui.", "EDIT_NOTE"))
+    if unlocked:
+        return W.sortable_screen(controls, blocks, tail, ctx.wide, moved, float(getattr(ctx.page, "width", 0) or 0))
+    return W.screen(controls + tail, ctx.wide)
 
 
 def _add_dialog(ctx: AppContext, offered: List[str], view_names: Dict[str, str], add: Any) -> None:
