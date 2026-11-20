@@ -229,3 +229,33 @@ def test_kosmesis_changes_the_icon(base: Path) -> None:  # noqa: F811
     assert len(tiles) == 4 and services.app_icon(base) == "C"
     tiles[3].on_click(SimpleNamespace(control=tiles[3]))  # D
     assert services.app_icon(base) == "D"
+
+
+def test_the_builds_use_the_list_that_scrolls_in_the_top_and_bottom_fifth(base: Path, monkeypatch) -> None:  # noqa: F811
+    """KAN-133: with zibaldone_riordina (only `flet build` installs it) the open lock gives its list, which scrolls by
+    itself when the finger is in the top or bottom fifth; the blocks still move as with Flet's own."""
+    import sys
+
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[1] / "extensions" / "zibaldone_riordina" / "src"))
+    monkeypatch.setitem(sys.modules, "zibaldone_riordina", None)  # so that the module is gone again after the test
+    monkeypatch.delitem(sys.modules, "zibaldone_riordina")
+    from zibaldone_riordina import ListaRiordino
+
+    shell = Shell(FakePage(width=412), base)
+    shell.start("/organon/personalizza")
+    unlock(shell)
+    sortable = sorter(shell.body.content)
+    assert type(sortable) is ListaRiordino and sortable.edge_fraction == 0.2 and sortable.show_default_drag_handles is False
+    layout = home_log.load_layout(base)
+    drop(shell.body.content, layout[0], "__end__")
+    assert home_log.load_layout(base) == layout[1:] + layout[:1]
+
+
+def test_without_the_extension_the_open_lock_keeps_flets_own_list(base: Path, monkeypatch) -> None:  # noqa: F811
+    import sys
+
+    monkeypatch.setitem(sys.modules, "zibaldone_riordina", None)  # as with `flet run` or `python -m zibaldone.ui`
+    shell = Shell(FakePage(), base)
+    shell.start("/organon/personalizza")
+    unlock(shell)
+    assert type(sorter(shell.body.content)) is ft.ReorderableListView
