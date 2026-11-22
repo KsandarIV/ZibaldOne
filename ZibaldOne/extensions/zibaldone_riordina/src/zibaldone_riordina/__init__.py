@@ -18,3 +18,6 @@ class ListaRiordino(ft.ReorderableListView):
 
     edge_fraction: float = 0.2
     edge_speed: float = 1000.0
+    touch_delay: float = 0.3
+    """Each item is its own handle (put no ReorderableDragHandle in it): the mouse takes it at once, the finger after
+    holding `touch_delay` seconds, so a swipe before that scrolls the page (KAN-138)."""
