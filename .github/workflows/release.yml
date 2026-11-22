@@ -5,11 +5,15 @@
 #    Se il tag esiste già non fa nulla. Il tag lo crea questo stesso flusso: un tag spinto con GITHUB_TOKEN
 #    non fa partire altri flussi, per questo i lavori non stanno in un flusso a parte;
 #  - push a mano di un tag `zibaldone-vX.Y.Z` (strada manuale, resta valida);
-#  - a mano dalla scheda Actions. Senza tag costruisce tutto ma non pubblica.
+#  - a mano dalla scheda Actions. Senza tag costruisce tutto ma non pubblica;
+#  - su una PR il cui ramo si chiama `release/...`: costruisce tutto e controlla le note della versione, ma non pubblica
+#    (KAN-139). L'APK e lo zip stanno tra gli artifact del lavoro per 7 giorni: si prova sul telefono prima del merge.
 # Sostituisce zibaldone-apk.yml e zibaldone-windows.yml. Piano: ZibaldOne/team/piano-ci-cd.md
 name: ZibaldOne Release
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
     tags: ["zibaldone-v*"]
@@ -35,6 +39,8 @@ env:
 jobs:
   plan:
     name: C'è una versione nuova?
+    # Sulle PR solo quelle di rilascio (ramo release/...): le altre non costruiscono APK e zip.
+    if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -104,7 +110,8 @@ jobs:
             echo "::error::il tag $TAG non corrisponde alla versione nel codice ($VERSION)"
             exit 1
           fi
-          if [ -n "$TAG" ] && [ ! -f "docs/versioni/v$VERSION.md" ]; then
+          # Anche sulla PR di rilascio: meglio scoprire ora che mancano le note, non dopo il merge.
+          if { [ -n "$TAG" ] || [ "$GITHUB_EVENT_NAME" = "pull_request" ]; } && [ ! -f "docs/versioni/v$VERSION.md" ]; then
             echo "::error::manca docs/versioni/v$VERSION.md (le note della release)"
             exit 1
           fi
