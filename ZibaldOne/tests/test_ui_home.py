@@ -246,6 +246,8 @@ def test_the_builds_use_the_list_that_scrolls_in_the_top_and_bottom_fifth(base: 
     unlock(shell)
     sortable = sorter(shell.body.content)
     assert type(sortable) is ListaRiordino and sortable.edge_fraction == 0.2 and sortable.show_default_drag_handles is False
+    # KAN-138: the list makes each block its own handle (mouse at once, finger after a short hold): no Flet handle inside
+    assert sortable.touch_delay == 0.3 and not any(isinstance(item.content, ft.ReorderableDragHandle) for item in sortable.controls)
     layout = home_log.load_layout(base)
     drop(shell.body.content, layout[0], "__end__")
     assert home_log.load_layout(base) == layout[1:] + layout[:1]
