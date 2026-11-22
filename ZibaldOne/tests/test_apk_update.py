@@ -75,7 +75,7 @@ def test_on_android_the_apk_goes_to_download_and_the_installer_opens(android: No
     apk_update.fetch(ctx, RELEASE)
     assert fake.started == [(RELEASE.apk_url, "ZibaldOne-0.3.3-android.apk")]
     assert fake.installed == [7] and not ctx.opened
-    assert "Download" in ctx.toasts[-1] and "apk_download" not in ctx.memory
+    assert "installazione" in ctx.toasts[-1] and "apk_download" not in ctx.memory
 
 
 def test_a_failed_download_falls_back_to_the_browser(android: None, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -84,6 +84,7 @@ def test_a_failed_download_falls_back_to_the_browser(android: None, monkeypatch:
     ctx = FakeContext()
     apk_update.fetch(ctx, RELEASE)
     assert not fake.installed and ctx.opened == [RELEASE.apk_url]
+    assert "download: RuntimeError: stato 16, motivo 0" in ctx.toasts[-1]  # the step and the status, not a generic sentence
 
 
 def test_without_pyjnius_android_opens_the_apk_link(android: None, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -119,7 +120,7 @@ def test_a_download_that_raises_says_why(android: None, monkeypatch: pytest.Monk
     monkeypatch.setattr(apk_update, "downloads", lambda: Broken([]))
     ctx = FakeContext()
     apk_update.fetch(ctx, RELEASE)
-    assert "PermissionError: no write access" in ctx.toasts[-1] and ctx.opened == [RELEASE.apk_url]
+    assert "avvio: PermissionError: no write access" in ctx.toasts[-1] and ctx.opened == [RELEASE.apk_url]
 
 
 def test_downloads_keeps_the_reason_when_android_refuses(android: None, monkeypatch: pytest.MonkeyPatch) -> None:
