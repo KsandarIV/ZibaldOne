@@ -100,3 +100,31 @@ def test_a_second_tap_while_downloading_does_not_start_another(android: None, mo
     ctx.memory["apk_download"] = True
     apk_update.fetch(ctx, RELEASE)
     assert not fake.started and not ctx.opened
+
+
+def test_the_fallback_says_why_the_installer_did_not_open(android: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    """KAN-141: the page opened in silence for two versions; now the toast gives the reason."""
+    monkeypatch.setattr(apk_update, "downloads", lambda: None)
+    monkeypatch.setattr(apk_update, "LAST_ERROR", "RuntimeError: Flet activity not found")
+    ctx = FakeContext()
+    apk_update.fetch(ctx, RELEASE)
+    assert "Flet activity not found" in ctx.toasts[-1] and ctx.opened == [RELEASE.apk_url]
+
+
+def test_a_download_that_raises_says_why(android: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    class Broken(FakeDownloads):
+        def start(self, url: str, name: str) -> int:
+            raise PermissionError("no write access")
+
+    monkeypatch.setattr(apk_update, "downloads", lambda: Broken([]))
+    ctx = FakeContext()
+    apk_update.fetch(ctx, RELEASE)
+    assert "PermissionError: no write access" in ctx.toasts[-1] and ctx.opened == [RELEASE.apk_url]
+
+
+def test_downloads_keeps_the_reason_when_android_refuses(android: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    def refuse() -> None:
+        raise RuntimeError("Flet activity not found")
+
+    monkeypatch.setattr(apk_update, "AndroidDownloads", refuse)
+    assert apk_update.downloads() is None and "Flet activity not found" in apk_update.LAST_ERROR
