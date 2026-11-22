@@ -4,10 +4,15 @@ Tutte le modifiche rilevanti di ZibaldOne. Formato ispirato a [Keep a Changelog]
 
 ## [Unreleased]
 
+## [0.3.3.4] — 2026-11-22
+Mini patch: fix del lucchetto in home.
+### Corretto
+- Fix lucchetto in home per la personalizzazione: con il lucchetto aperto, in Kosmesis e in Oikos home, il pulsante per richiuderlo resta sullo schermo del telefono (KAN-140).
+
 ## [0.3.3.3] — 2026-11-20
 Mini patch: spostare i riquadri della home in Kosmesis e in Oikos home.
 ### Cambiato
-- Kosmesis e Oikos home tornano al lucchetto: chiuso, pagina normale; aperto, ogni riquadro intero si trascina subito, col mouse e col dito, senza pressione lunga. La crocetta per nascondere c'è solo da aperto (KAN-132, KAN-133).
+- Kosmesis e Oikos home tornano al lucchetto: chiuso, pagina normale; aperto, ogni riquadro intero si trascina subito col mouse; col dito dopo una pressione breve. La crocetta per nascondere c'è solo da aperto (KAN-132, KAN-133).
 - Con il lucchetto aperto la pagina scorre da sola quando il dito o il mouse è nel quinto alto o basso della lista: nuova estensione Flet `extensions/zibaldone_riordina`, solo nelle build APK e Windows (KAN-133).
 - La release pubblica solo lo zip di Windows e l'APK; le note di versione sono scritte solo per l'utente.
 - Zip e APK escono senza il client Google finché Google non è integrato: niente accesso con Google, tutto in locale; nelle Nuvole l'opzione Drive dice che arriverà più avanti.
