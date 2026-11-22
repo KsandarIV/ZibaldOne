@@ -1265,3 +1265,16 @@ def test_models_have_no_personalize_gear_and_the_home_title_is_oikos_home(ready:
     shell.navigate("/oggi")
     found = texts(shell.body.content)
     assert "Oikos • Home" in found and "Oggi • Hic et nunc" in found
+
+
+def test_open_lock_on_the_home_keeps_the_lock_button_on_a_phone_screen(ready: Path) -> None:
+    """KAN-140: with the lock open the caption must not push the lock button out of the row."""
+    shell = Shell(FakePage(width=390), ready)
+    shell.start("/oggi")
+    lock = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Sblocca per spostare i riquadri")
+    click(lock)
+    lock = next(item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Blocca i riquadri")
+    row = next(item for item in walk(shell.body.content) if isinstance(item, ft.Row) and lock in item.controls)
+    assert [child for child in row.controls if child is not lock and getattr(child, "expand", None)], "the caption has to take the room that is left"
+    click(lock)  # and one tap closes it again
+    assert [item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Sblocca per spostare i riquadri"]
