@@ -1,5 +1,5 @@
-"""The new APK, from the app (KAN-12, KAN-13): Android's download manager puts it in Download,
-then the system installer opens and asks one confirmation. Nothing is installed silently.
+"""The new APK, from the app (KAN-12, KAN-13): Android's download manager puts it in the app's own folder
+(no storage permission needed, KAN-141), then the system installer opens and asks one confirmation. Nothing is installed silently.
 
 Android only, through `pyjnius`. Elsewhere, or when something fails, the caller opens the link in the browser.
 """
@@ -26,6 +26,7 @@ class Progress:
     status: int
     done: int = 0
     total: int = 0
+    reason: int = 0  # DownloadManager.COLUMN_REASON: why it failed or is paused (HTTP code, or ERROR_*)
 
     @property
     def finished(self) -> bool:
@@ -60,7 +61,16 @@ class AndroidDownloads:
         request.setDescription("Aggiornamento di ZibaldOne")
         request.setMimeType(APK_TYPE)
         request.setNotificationVisibility(self.autoclass("android.app.DownloadManager$Request").VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        request.setDestinationInExternalPublicDir(environment.DIRECTORY_DOWNLOADS, name)
+        # The app's own folder, not the public Download: with scoped storage DownloadManager refuses the public one
+        # (SecurityException "No permission to write") unless the app holds a storage permission that Android 11+ no longer
+        # grants; here nothing is needed. A file left by an earlier try would make the download fail (ERROR_FILE_ALREADY_EXISTS).
+        folder = self.activity.getExternalFilesDir(environment.DIRECTORY_DOWNLOADS)
+        if folder is None:
+            raise RuntimeError("cartella dell'app non disponibile")
+        old = self.autoclass("java.io.File")(folder, name)
+        if old.exists():
+            old.delete()
+        request.setDestinationInExternalFilesDir(self.activity, environment.DIRECTORY_DOWNLOADS, name)
         return int(self.manager.enqueue(request))
 
     def progress(self, download_id: int) -> Progress:
@@ -75,7 +85,7 @@ class AndroidDownloads:
             def value(name: str) -> int:
                 return int(cursor.getLong(cursor.getColumnIndex(name)))
 
-            return Progress(value(column.COLUMN_STATUS), value(column.COLUMN_BYTES_DOWNLOADED_SO_FAR), value(column.COLUMN_TOTAL_SIZE_BYTES))
+            return Progress(value(column.COLUMN_STATUS), value(column.COLUMN_BYTES_DOWNLOADED_SO_FAR), value(column.COLUMN_TOTAL_SIZE_BYTES), value(column.COLUMN_REASON))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -133,22 +143,25 @@ def fetch(ctx: Any, release: Any) -> None:
     name = file_name(release.version)
 
     async def task() -> None:
+        stage = "avvio"  # which step broke, for the toast
         try:
             download_id = manager.start(release.apk_url, name)
-            ctx.toast(f"Scarico ZibaldOne {release.version} nella cartella Download…")
+            ctx.toast(f"Scarico ZibaldOne {release.version}…")
             ctx.update()
+            stage = "download"
             progress = manager.progress(download_id)
             while not progress.finished:
                 await asyncio.sleep(POLL_SECONDS)
                 progress = manager.progress(download_id)
             if progress.status != SUCCESSFUL:
-                raise RuntimeError("download failed")
-            ctx.toast(f"{name} è in Download. Si apre l'installazione: conferma per aggiornare.")
+                raise RuntimeError(f"stato {progress.status}, motivo {progress.reason}")
+            ctx.toast("Aggiornamento scaricato. Si apre l'installazione: conferma per aggiornare.")
             ctx.update()
+            stage = "installazione"
             manager.install(download_id)
         except Exception as error:
             logger.info("apk download failed", exc_info=True)
-            ctx.toast(f"Non riesco a scaricare l'aggiornamento dall'app ({why(error)}): lo apro nel browser.", error=True)
+            ctx.toast(f"Non riesco ad aggiornare dall'app ({stage}: {why(error)}): lo apro nel browser.", error=True)
             ctx.open_url(link)
             ctx.update()
         finally:
