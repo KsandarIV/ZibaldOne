@@ -105,7 +105,8 @@ def build(ctx: AppContext, route: Route) -> ft.Control:
     moved: Any = None
     tail: List[ft.Control] = []
     if unlocked:
-        controls.append(ft.Row([W.caption("Sbloccata: trascina un riquadro per spostarlo, la crocetta lo nasconde."), lock], alignment=ft.MainAxisAlignment.SPACE_BETWEEN))
+        # the text takes the room that is left and wraps: without `expand` a Row gives it all the width it wants, and on a phone it pushes the lock off the screen (KAN-140)
+        controls.append(ft.Row([ft.Container(W.caption("Sbloccata: trascina un riquadro per spostarlo, la crocetta lo nasconde."), expand=True), lock], vertical_alignment=ft.CrossAxisAlignment.CENTER))
         entries = [(key, block) for key in shown for block in [_tile(ctx, key, model, tiles)] if block is not None]
         empty[:] = [key for key in shown if key not in dict(entries)]
         blocks, moved = home_layout.sortable(entries, view_names, save, remove=lambda key: save([item for item in shown if item != key]))
