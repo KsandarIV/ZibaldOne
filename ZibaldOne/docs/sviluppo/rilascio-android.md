@@ -39,6 +39,9 @@ Il file del client non va mai nella repo (è in `.gitignore`): il workflow lo sc
 ## La repo deve essere pubblica
 I tester scaricano l'APK dalla pagina delle release e l'app controlla gli aggiornamenti senza account: entrambe le cose funzionano solo se la repo è **pubblica**. Con una repo privata la build parte lo stesso, ma l'APK si scarica solo da GitHub con un account che ha accesso, e il controllo degli aggiornamenti risponde "il repository è privato?".
 
+## Provare l'APK prima del merge
+La PR di rilascio (ramo `release/X.Y.Z`) fa partire la stessa costruzione della release, ma **non pubblica nulla** e non crea il tag. A fine lavoro, dalla pagina del lavoro su GitHub, tra gli *Artifacts* si scarica `android` (l'APK, dentro uno zip; restano 7 giorni, serve il login GitHub) e si installa sopra la versione vecchia. Il merge, che crea il tag e pubblica, si fa dopo la prova. Lo stesso vale per qualsiasi ramo: **Actions → ZibaldOne Release → Run workflow**, scegli il ramo, senza scrivere il tag. L'APK ha la stessa chiave di firma delle release.
+
 ## Fare uscire una versione
 Il commit della versione e il tag li prepara Claude (o `scripts/release.py`). Poi, dal PC:
 ```powershell
