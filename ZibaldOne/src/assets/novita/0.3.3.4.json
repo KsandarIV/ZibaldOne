@@ -1,0 +1,8 @@
+{
+  "versione": "0.3.3.4",
+  "data": "2026-11-22",
+  "titolo": "Fix lucchetto in home per la personalizzazione",
+  "voci": [
+    { "tipo": "corretto", "testo": "Fix lucchetto in home per la personalizzazione: sul telefono, con il lucchetto aperto, il pulsante per richiuderlo resta sempre visibile." }
+  ]
+}
