@@ -13,6 +13,8 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+LAST_ERROR = ""  # why the Android downloads could not start, shown to the person when the app falls back to the browser (KAN-141)
+
 APK_TYPE = "application/vnd.android.package-archive"
 POLL_SECONDS = 1.0
 # DownloadManager.STATUS_*
@@ -90,15 +92,22 @@ class AndroidDownloads:
         self.activity.startActivity(intent)
 
 
+def why(error: BaseException) -> str:
+    """A short «Type: message» for the toast: enough for Alex to read it on the phone and tell us."""
+    return f"{type(error).__name__}: {error}"[:140]
+
+
 def downloads() -> Optional[Any]:
     """The Android downloads, or None where they are not available (desktop, web, pyjnius missing)."""
     from zibaldone.ui import services
 
+    global LAST_ERROR
     if not services.running_on_android():
         return None
     try:
         return AndroidDownloads()
-    except Exception:  # pyjnius missing, or Android refused
+    except Exception as error:  # pyjnius missing, or Android refused
+        LAST_ERROR = why(error)
         logger.info("android downloads not available", exc_info=True)
         return None
 
@@ -117,6 +126,8 @@ def fetch(ctx: Any, release: Any) -> None:
         return
     manager = downloads() if android and release.apk_url and ctx.page is not None else None
     if manager is None:
+        if android and release.apk_url:  # say why the page opens instead of the installer, never in silence
+            ctx.toast(f"Non riesco ad aggiornare dall'app ({LAST_ERROR or 'motivo sconosciuto'}): apro il file da GitHub.", error=True)
         ctx.open_url(link)
         return
     name = file_name(release.version)
@@ -135,9 +146,9 @@ def fetch(ctx: Any, release: Any) -> None:
             ctx.toast(f"{name} è in Download. Si apre l'installazione: conferma per aggiornare.")
             ctx.update()
             manager.install(download_id)
-        except Exception:
+        except Exception as error:
             logger.info("apk download failed", exc_info=True)
-            ctx.toast("Non riesco a scaricare l'aggiornamento dall'app: lo apro nel browser.", error=True)
+            ctx.toast(f"Non riesco a scaricare l'aggiornamento dall'app ({why(error)}): lo apro nel browser.", error=True)
             ctx.open_url(link)
             ctx.update()
         finally:
