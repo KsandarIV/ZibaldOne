@@ -31,6 +31,17 @@ def test_the_real_notes_load_and_the_button_stays_lit_until_they_are_opened(read
     assert not novita.has_unseen(ready, releases)
 
 
+def test_novita_shows_only_the_latest_patch_note(ready: Path) -> None:
+    releases = novita.load_releases()
+    assert len(releases) > 1
+    shell = Shell(FakePage(), ready)
+    shell.start("/oggi")
+    shell.navigate("/novita")
+    shown = " ".join(texts(shell.body.content))
+    assert releases[0].version in shown
+    assert not [older.version for older in releases[1:] if f"{older.version} ·" in shown]
+
+
 def test_the_sparkles_are_dimmer_once_seen_and_on_a_wide_screen() -> None:
     lit = sparkles.sparkle_button(lambda _: None, unseen=True, wide=False)
     seen = sparkles.sparkle_button(lambda _: None, unseen=False, wide=False)
