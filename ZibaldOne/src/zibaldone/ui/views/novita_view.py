@@ -1,4 +1,4 @@
-"""Novità: what each version brought, newest first."""
+"""Novità: what the latest version brought (KAN-137: only the last patch note; the older ones stay in the files and on GitHub)."""
 
 from typing import List
 
@@ -14,9 +14,9 @@ KIND_COLORS = {"nuovo": T.ACCENT, "migliorato": T.ACCENT_2, "corretto": T.TEXT_D
 
 
 def build(ctx: AppContext, route: Route) -> ft.Control:
-    releases = novita.load_releases()
+    releases = novita.load_releases()[:1]
     novita.mark_seen(ctx.folder, releases)
-    controls: List[ft.Control] = [W.screen_header("Novità", "Neon", "cosa è arrivato con ogni versione", on_back=ctx.back)]
+    controls: List[ft.Control] = [W.screen_header("Novità", "Neon", "cosa è arrivato con l'ultima versione", on_back=ctx.back)]
     if not releases:
         controls.append(W.empty_state("Nessuna novità da mostrare, per ora.", "AUTO_AWESOME"))
     for release in releases:
