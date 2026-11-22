@@ -207,7 +207,8 @@ def sortable_screen(
 ) -> ft.Control:
     """A scrolling page with a list in the middle that the user puts in order: shown only with the lock open (KAN-132/133).
 
-    The whole item is its own invisible handle: the mouse or the finger takes it at once, and its buttons still answer
+    The whole item is its own invisible handle: the mouse takes it at once; in the builds (zibaldone_riordina) the finger
+    after a short hold (about 0.3 s), so that a swipe before then scrolls the page (KAN-138). Its buttons still answer
     a click. The others make room as it passes, and the page scrolls by itself near the edges: in the builds (APK,
     Windows) as soon as the finger or the mouse is in the top or bottom fifth of the list (zibaldone_riordina);
     elsewhere when the block reaches the edge. `moved(old, new)` gets the positions after the drop.
@@ -218,14 +219,18 @@ def sortable_screen(
     def holder(controls: Sequence[ft.Control], top: float, bottom: float) -> ft.Control:
         return ft.Container(ft.Column(list(controls), spacing=14, horizontal_alignment=ft.CrossAxisAlignment.STRETCH), padding=ft.Padding.only(left=side, right=side, top=top, bottom=bottom))
 
-    def item(key: str, control: ft.Control) -> ft.Control:
-        return ft.Container(ft.ReorderableDragHandle(control, mouse_cursor=ft.MouseCursor.GRAB), key=key, padding=ft.Padding.only(left=side, right=side, bottom=14))
+    sortable = _sortable_list()
+    own_handles = sortable is not ft.ReorderableListView  # ListaRiordino makes each item its own handle: mouse at once, finger after a short hold (KAN-138)
 
-    return _sortable_list()(
+    def item(key: str, control: ft.Control) -> ft.Control:
+        content = control if own_handles else ft.ReorderableDragHandle(control, mouse_cursor=ft.MouseCursor.GRAB)
+        return ft.Container(content, key=key, padding=ft.Padding.only(left=side, right=side, bottom=14))
+
+    return sortable(
         controls=[item(key, control) for key, control in items],
         header=holder(head, 20 if wide else 12, 14),
         footer=holder(tail, 0, 40),
-        show_default_drag_handles=False,  # our own handle, the same on the PC and on the phone (no long press)
+        show_default_drag_handles=False,  # our own handles (see above)
         on_reorder=lambda event: moved(event.old_index, event.new_index),
         on_scroll=_track_scroll,
         expand=True,

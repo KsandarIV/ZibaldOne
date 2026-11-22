@@ -111,13 +111,40 @@ class _ListaRiordinoState extends State<ListaRiordinoControl>
     }
   }
 
+  /// The item is its own handle: the mouse takes it at once, the finger (or
+  /// the stylus) only after `touch_delay` seconds of holding, so that a swipe
+  /// before then scrolls the page (KAN-138).
+  void _down(BuildContext context, int index, PointerDownEvent event) {
+    final list = SliverReorderableList.maybeOf(context);
+    if (list == null) return;
+    final immediate = event.kind == PointerDeviceKind.mouse ||
+        event.kind == PointerDeviceKind.trackpad;
+    final delay = Duration(
+        milliseconds:
+            ((widget.control.getDouble("touch_delay", 0.3)!).clamp(0.05, 2.0) *
+                    1000)
+                .round());
+    final MultiDragGestureRecognizer recognizer = immediate
+        ? ImmediateMultiDragGestureRecognizer(debugOwner: this)
+        : DelayedMultiDragGestureRecognizer(delay: delay, debugOwner: this);
+    recognizer.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+    list.startItemDragReorder(index: index, event: event, recognizer: recognizer);
+  }
+
   Widget _item(BuildContext context, int index) {
     final control = _controls[index];
     final keyValue = control.getKey("key")?.value ?? control.id;
     return ReorderableItemScope(
       key: ValueKey(keyValue),
       index: index,
-      child: ControlWidget(key: ValueKey(keyValue), control: control),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.grab,
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (event) => _down(context, index, event),
+          child: ControlWidget(key: ValueKey(keyValue), control: control),
+        ),
+      ),
     );
   }
 
