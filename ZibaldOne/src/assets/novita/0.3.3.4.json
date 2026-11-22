@@ -1,11 +1,8 @@
 {
   "versione": "0.3.3.4",
   "data": "2026-11-22",
-  "titolo": "Correzioni dopo la prova sul telefono",
+  "titolo": "Fix lucchetto in home per la personalizzazione",
   "voci": [
-    { "tipo": "corretto", "testo": "Sul telefono, con il lucchetto aperto, il pulsante per richiuderlo resta sempre visibile." },
-    { "tipo": "corretto", "testo": "Sul telefono il riquadro si solleva dopo una pressione breve (circa 0,3 secondi): scorrere la pagina con il dito non sposta più i riquadri per sbaglio. Col mouse si sposta subito." },
-    { "tipo": "corretto", "testo": "Se «Scarica» non riesce ad aggiornare l'app, ti dice il motivo invece di aprire GitHub senza spiegazioni." },
-    { "tipo": "migliorato", "testo": "In Novità vedi solo le novità dell'ultima versione." }
+    { "tipo": "corretto", "testo": "Fix lucchetto in home per la personalizzazione: sul telefono, con il lucchetto aperto, il pulsante per richiuderlo resta sempre visibile." }
   ]
 }

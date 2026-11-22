@@ -5,19 +5,14 @@ Tutte le modifiche rilevanti di ZibaldOne. Formato ispirato a [Keep a Changelog]
 ## [Unreleased]
 
 ## [0.3.3.4] — 2026-11-22
-Mini patch: le correzioni dopo la prova della 0.3.3.3 sul telefono.
+Mini patch: fix del lucchetto in home.
 ### Corretto
-- Con il lucchetto aperto, in Kosmesis e in Oikos home, il pulsante per richiuderlo resta sullo schermo del telefono: il testo accanto va a capo invece di spingerlo fuori (KAN-140).
-- Sul telefono il riquadro si solleva dopo una pressione breve (circa 0,3 secondi), così trascinare la pagina per scorrerla non sposta più i riquadri; col mouse resta subito (KAN-138).
-- «Scarica» negli aggiornamenti dice perché apre GitHub invece dell'installazione, invece di farlo in silenzio (KAN-141).
-### Cambiato
-- Novità mostra solo la nota dell'ultima versione; le precedenti restano nei file e su GitHub (KAN-137).
-- La PR di rilascio `release/X.Y.Z` costruisce APK e zip senza pubblicare, così l'APK si prova sul telefono prima del merge (KAN-139).
+- Fix lucchetto in home per la personalizzazione: con il lucchetto aperto, in Kosmesis e in Oikos home, il pulsante per richiuderlo resta sullo schermo del telefono (KAN-140).
 
 ## [0.3.3.3] — 2026-11-20
 Mini patch: spostare i riquadri della home in Kosmesis e in Oikos home.
 ### Cambiato
-- Kosmesis e Oikos home tornano al lucchetto: chiuso, pagina normale; aperto, ogni riquadro intero si trascina subito col mouse; col dito dalla 0.3.3.4 dopo una pressione breve. La crocetta per nascondere c'è solo da aperto (KAN-132, KAN-133).
+- Kosmesis e Oikos home tornano al lucchetto: chiuso, pagina normale; aperto, ogni riquadro intero si trascina subito col mouse; col dito dopo una pressione breve. La crocetta per nascondere c'è solo da aperto (KAN-132, KAN-133).
 - Con il lucchetto aperto la pagina scorre da sola quando il dito o il mouse è nel quinto alto o basso della lista: nuova estensione Flet `extensions/zibaldone_riordina`, solo nelle build APK e Windows (KAN-133).
 - La release pubblica solo lo zip di Windows e l'APK; le note di versione sono scritte solo per l'utente.
 - Zip e APK escono senza il client Google finché Google non è integrato: niente accesso con Google, tutto in locale; nelle Nuvole l'opzione Drive dice che arriverà più avanti.
