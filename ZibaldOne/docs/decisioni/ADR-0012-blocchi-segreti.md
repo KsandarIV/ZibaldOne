@@ -1,7 +1,7 @@
 # ADR-0012 — Blocchi segreti cifrati, due livelli e PIN
 
 - **Data**: 2026-10-17 · **Stato**: accettata (richiesta di Alex, fase 0.2, v0.2.3)
-- **Contesto**: la vecchia Journal App proteggeva i dati sensibili con un PIN ([requisiti della fase 0.2](../tecnica/requisiti-v0.2.md), conflitto 1): un PIN da solo non protegge i file. In ZibaldOne il database sul dispositivo è in chiaro e solo i backup sono cifrati ([ADR-0006](ADR-0006-storia-e-backup-cifrati.md)). Servono dati davvero cifrati (documenti, indirizzi, note mediche, il diario segreto) senza rendere scomodo scrivere ogni giorno, e fuori dalla ricerca e dall'IA.
+- **Contesto**: la vecchia Journal App proteggeva i dati sensibili con un PIN (requisiti della fase 0.2, conflitto 1): un PIN da solo non protegge i file. In ZibaldOne il database sul dispositivo è in chiaro e solo i backup sono cifrati ([ADR-0006](ADR-0006-storia-e-backup-cifrati.md)). Servono dati davvero cifrati (documenti, indirizzi, note mediche, il diario segreto) senza rendere scomodo scrivere ogni giorno, e fuori dalla ricerca e dall'IA.
 - **Decisione**:
   - **Un tipo di blocco**, `secret`, non una voce o un database a parte: il resto della voce (giorno, tipo di visita, medico) resta cercabile, e i modelli tuoi possono avere segreti.
   - **Cifratura a chiave pubblica**, la stessa dei backup: l'archivio cifra con le chiavi pubbliche salvate in `keys.json`, quindi **scrivere non chiede nulla**; leggere sì. L'ultimo controllo prima di salvare rifiuta qualsiasi segreto in chiaro.

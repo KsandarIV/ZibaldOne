@@ -30,7 +30,7 @@ Non c'è ancora un modo di correggere una data a mano.
 - Il riquadro **Tempo speso** somma, per raccolta, i blocchi numero misurati in ore (o minuti): *Ore di lettura* nei libri, *Ore di visione* in film, serie e anime, *Ore di gioco* nei videogiochi e nei giochi da tavolo. Ogni scheda mostra le sue ore.
 
 ## Importare da un file
-Da **Collezioni → Importa da un file** (o `zbone importa FONTE FILE`): scegli il servizio, il file, vedi quanti elementi verrebbero aggiunti e conferma. ZibaldOne legge **solo il file che gli dai**: non si collega ai tuoi account né alle loro API ([requisiti, punto 2](requisiti-v0.2.md)). Servono i modelli di Museion (`zbone pack install collezioni`).
+Da **Collezioni → Importa da un file** (o `zbone importa FONTE FILE`): scegli il servizio, il file, vedi quanti elementi verrebbero aggiunti e conferma. ZibaldOne legge **solo il file che gli dai**: non si collega ai tuoi account né alle loro API (requisiti, punto 2). Servono i modelli di Museion (`zbone pack install collezioni`).
 
 | Fonte | Il file | Diventa |
 |---|---|---|
