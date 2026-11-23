@@ -9,6 +9,7 @@ from zibaldone.core import finance as F
 from zibaldone.core import secrets
 from zibaldone.core.areas import area_label, goals_overview
 from zibaldone.core.people import load_people, occasions
+from zibaldone.core import views as V
 from zibaldone.core.views import ViewError, load_views, run_view
 from zibaldone.ui import services
 from zibaldone.ui import theme as T
@@ -114,6 +115,20 @@ def balance_tile(ctx: AppContext, store: Any, now: datetime) -> Optional[ft.Cont
         _line(f"Saldo {F.format_amount(F.balance(ledger))}", f"Questo mese: entrate {F.format_amount(month.income)}, spese {F.format_amount(month.spent)}", lambda _: ctx.go("/finanze")),
     ]
     return _tile("Bilancio", "Oikonomia", rows)
+
+
+def views_tile(ctx: AppContext, store: Any) -> ft.Control:
+    """«Viste Lente» (KAN-82): every saved view, one tap opens it; on by default, so Lente is never out of reach."""
+    from zibaldone.ui.views.saved_views import summary
+
+    footer = W.text_button("Tutte le viste", lambda _: ctx.go("/viste"), icon="ARROW_FORWARD")
+    if store.find_template(V.TEMPLATE) is None:
+        return _tile("Viste Lente", "", [W.caption("Le viste arrivano con la Scuola «Lente · Viste»: dalla pagina Viste la installi.")], footer)
+    views = load_views(store)
+    if not views:
+        return _tile("Viste Lente", "", [W.caption("Non hai ancora viste: crea una voce con il modello Lente e le viste possibili compaiono qui.")], footer)
+    rows = [_line(view.name, summary(view), lambda _, view_id=view.id: ctx.go(f"/viste/{view_id}")) for view in views]
+    return _tile("Viste Lente", "", rows, footer)
 
 
 def view_tile(ctx: AppContext, store: Any, view_id: str, today: date) -> Optional[ft.Control]:

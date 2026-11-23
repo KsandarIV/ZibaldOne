@@ -23,6 +23,7 @@ LABELS: Dict[str, str] = {
     "ricorrenze": "Ricorrenze",
     "obiettivi": "Obiettivi",
     "bilancio": "Bilancio",
+    "viste": "Viste Lente",
 }
 
 def label_of(key: str, view_names: Dict[str, str]) -> str:

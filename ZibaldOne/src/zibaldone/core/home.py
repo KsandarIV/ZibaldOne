@@ -6,7 +6,7 @@ A key is one of `TILES`, or `vista:<id>` for a saved view (`core/views.py`).
 
 from typing import Collection, Iterable, List, Optional
 
-TILES = ("promemoria", "citazione", "stoa", "aree", "abitudini", "ricorrenze", "obiettivi", "bilancio")
+TILES = ("promemoria", "citazione", "stoa", "aree", "abitudini", "ricorrenze", "obiettivi", "bilancio", "viste")  # "viste": Lente's views in one tile, on by default (KAN-82)
 FIXED = ("promemoria", "citazione", "stoa", "aree")  # on Oggi they cannot be taken away (0.3.2); only Kosmesis can switch them off
 DEFAULT_LAYOUT = list(TILES)
 VIEW_PREFIX = "vista:"
