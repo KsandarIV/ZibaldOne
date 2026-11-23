@@ -48,6 +48,7 @@ def _gather(ctx: AppContext) -> Any:
             "ricorrenze": lambda: tiles_.occasions_tile(ctx, store, today),
             "obiettivi": lambda: tiles_.goals_tile(ctx, store, today),
             "bilancio": lambda: tiles_.balance_tile(ctx, store, now),
+            "viste": lambda: tiles_.views_tile(ctx, store),
         }
         view_names = {item.id: item.name for item in V.load_views(store)} if store.find_template(V.TEMPLATE) is not None else {}
         tiles: Dict[str, Optional[ft.Control]] = {}

@@ -261,3 +261,28 @@ def test_without_the_extension_the_open_lock_keeps_flets_own_list(base: Path, mo
     shell.start("/organon/personalizza")
     unlock(shell)
     assert type(sorter(shell.body.content)) is ft.ReorderableListView
+
+
+def test_the_lente_tile_is_on_by_default_lists_the_views_and_the_entry_opens_its_view(base: Path) -> None:  # noqa: F811
+    """KAN-82: «Viste Lente» is on Oggi without any setting; Lente entries have the button that opens the view."""
+    shell = Shell(FakePage(), base)
+    shell.start("/oggi")
+    assert "VISTE LENTE" in texts(shell.body.content) and "Le viste arrivano con la Scuola «Lente · Viste»: dalla pagina Viste la installi." in texts(shell.body.content)
+    seed(base, shell.ctx.now().date())
+    shell.start("/oggi")
+    assert any("crea una voce con il modello Lente" in text for text in texts(shell.body.content))
+    with Store.open(base) as store:
+        view_id = store.add_entry("vista", {"nome": "Persone Marco", "modello": "persona", "testo": "Marco"}).id
+    shell.start("/oggi")
+    assert "Persone Marco" in texts(shell.body.content)
+    row = next(item for item in walk(shell.body.content) if isinstance(item, ft.Container) and item.on_click is not None and "Persone Marco" in texts(item))
+    row.on_click(SimpleNamespace(control=row))
+    assert shell.current.screen == "vista" and shell.current.arg == view_id
+    shell.start(f"/voci/{view_id}")
+    click(button(shell.body.content, "Apri la vista"))
+    assert shell.current.screen == "vista"
+    with Store.open(base) as store:
+        other = next(entry.id for entry in store.list_entries(template="persona"))
+    shell.start(f"/voci/{other}")
+    with pytest.raises(LookupError):
+        button(shell.body.content, "Apri la vista")  # only Lente entries have it
