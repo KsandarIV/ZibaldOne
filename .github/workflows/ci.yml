@@ -12,7 +12,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: zibaldone-ci-${{ github.ref }}
+  # Su una PR il push nuovo annulla la corsa vecchia; su main (e a mano) ogni commit ha il suo gruppo, così nessuna corsa ne annulla un'altra.
+  group: zibaldone-ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
 defaults:
