@@ -3,7 +3,7 @@
 | Cartella | Per chi | Cosa contiene |
 |---|---|---|
 | [utente/](utente/) | chi usa l'app | guida semplice, esempi |
-| [tecnica/](tecnica/) | chi sviluppa | architettura, roadmap, concetti |
+| [tecnica/](tecnica/) | chi sviluppa | architettura e concetti |
 | [decisioni/](decisioni/) | chi sviluppa | ADR: perché si è scelto qualcosa |
 | [versioni/](versioni/) | tutti | cosa contiene ogni versione, come provarla |
 | [brand/](brand/) | tutti | nome, tono, nomi filosofici, mascotte |

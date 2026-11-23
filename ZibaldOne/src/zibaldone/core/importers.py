@@ -1,7 +1,7 @@
 """Import from the files other services export (0.2.5): Goodreads, Letterboxd, MyAnimeList, Steam.
 
 Only from a file the user hands over, never through an account or an API of
-those services (docs/tecnica/requisiti-v0.2.md, conflict 2). Reading a file is
+those services (requirements of the old Journal App, conflict 2). Reading a file is
 pure (`parse_*` give `ImportItem`s); `import_items` writes them through a Store.
 
 Votes are mapped to the stars of the Museion templates (5 stars, half points);

@@ -366,7 +366,7 @@ Versione per i tester.
 ### Corretto
 - Nella guida rapida mancava il titolo della sezione sul pensiero del giorno.
 ### Documentazione
-- [Storia e backup](docs/tecnica/backup.md); guida rapida con backup ed export; roadmap con la [strada verso la 1.0](docs/tecnica/roadmap.md#verso-la-10).
+- [Storia e backup](docs/tecnica/backup.md); guida rapida con backup ed export; roadmap con la strada verso la 1.0.
 
 ## [0.0.5] — 2026-10-17
 ### Aggiunto
@@ -410,9 +410,9 @@ Versione per i tester.
 - Accesso con Google obbligatorio, scelta tra solo locale e locale + Google Drive, destinazioni cloud intercambiabili ([ADR-0007](docs/decisioni/ADR-0007-account-google-e-destinazioni-cloud.md)).
 - Setup Windows/PowerShell; parti IA rinviate.
 - [Visione](docs/tecnica/visione.md): tutto in uno a moduli (diario, collezioni, documenti, finanze, password via Bitwarden, grafo, raccomandazioni), Windows + Android + Linux futuro, sincronizzazione PC ↔ telefono.
-- [Roadmap fino alla v0.1.5](docs/tecnica/roadmap.md) e [confronto con la vecchia Journal App](docs/tecnica/confronto-journal-app.md).
+- Roadmap fino alla v0.1.5 e confronto con la vecchia Journal App.
 - Notifiche che spronano a scrivere ([ADR-0008](docs/decisioni/ADR-0008-notifiche.md)) e anonimizzatore per i futuri modelli di IA ([ADR-0009](docs/decisioni/ADR-0009-anonimizzatore.md)).
-- [Requisiti dello sprint v0.2](docs/tecnica/requisiti-v0.2.md) dai documenti della vecchia Journal App (8 aree).
+- Requisiti dello sprint v0.2 dai documenti della vecchia Journal App (8 aree).
 - [Guida rapida](docs/utente/guida-rapida.md) con modelli e voci; [riferimento dei blocchi](docs/tecnica/blocchi.md); dati e migrazioni in [architettura](docs/tecnica/architettura.md).
 
 ## [0.0.2] — 2026-10-17

@@ -8,7 +8,7 @@
     - **0.0.x** fondamenta (CLI, dati, modelli, backup, cifratura, cloud, prima interfaccia);
     - **0.1.x** app per i tester (APK, notifiche, ricerca, grafo, statistiche, anonimizzatore);
     - **0.2.x** sprint delle 8 aree dalla vecchia Journal App.
-  - La **1.0** arriva quando l'app è davvero usabile ogni giorno: i criteri sono nella [roadmap](../tecnica/roadmap.md#verso-la-10).
+  - La **1.0** arriva quando l'app è davvero usabile ogni giorno: i criteri li decide chi sviluppa l'app.
   - Le correzioni prima della 1.0 entrano nella versione successiva. Dopo la 1.0 si passa al SemVer classico: correzione `1.0.1`, funzione nuova `1.1.0`, cambiamento incompatibile `2.0.0`.
   - Rilascio: `py scripts/release.py patch` per la capacità successiva, `minor` per la fase successiva ([versionamento](../sviluppo/versionamento.md)).
 - **Conseguenze**:

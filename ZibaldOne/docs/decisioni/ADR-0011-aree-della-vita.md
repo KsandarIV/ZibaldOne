@@ -1,7 +1,7 @@
 # ADR-0011 — Le 8 aree della vita come dato di modelli e voci
 
 - **Data**: 2026-10-17 · **Stato**: accettata (richiesta di Alex, fase 0.2)
-- **Contesto**: la vecchia Journal App metteva tutto dentro gli "aspetti della vita" ([requisiti della fase 0.2](../tecnica/requisiti-v0.2.md)). In ZibaldOne fino alla 0.1.5 le 8 aree erano solo le scale del check-in *Eudaimonia*: un libro, un allenamento o una persona non sapevano a quale area appartenessero, e non c'era un posto dove vedere un'area intera.
+- **Contesto**: la vecchia Journal App metteva tutto dentro gli "aspetti della vita" (requisiti della fase 0.2). In ZibaldOne fino alla 0.1.5 le 8 aree erano solo le scale del check-in *Eudaimonia*: un libro, un allenamento o una persona non sapevano a quale area appartenessero, e non c'era un posto dove vedere un'area intera.
 - **Decisione**:
   - Le 8 aree sono **fisse** (Personale, Salute, Finanze, Famiglia, Sociale, Lavoro, Studio, Svago), con nomi alternativi per chi scrive (`health`, `soldi`, `amici` …). Non si aggiungono aree nuove: per il resto ci sono modelli ed etichette.
   - **Area come campo**, non come modello: `area` nel modello (vale per tutte le sue voci) e nella voce (vince su quella del modello). Una voce può stare in più aree con un blocco *etichette* che si chiama `aree`.

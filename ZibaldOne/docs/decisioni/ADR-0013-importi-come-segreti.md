@@ -1,7 +1,7 @@
 # ADR-0013 — Gli importi delle finanze sono segreti cifrati, sommati solo in memoria
 
 - **Data**: 2026-10-24 · **Stato**: accettata (richiesta di Alex, fase 0.2, v0.2.6)
-- **Contesto**: le finanze sono il modulo più delicato dello sprint ([requisiti](../tecnica/requisiti-v0.2.md)). Un saldo, uno stipendio o un debito con un amico non devono finire nella ricerca, nelle esportazioni, nelle statistiche o in un'IA. Eppure servono somme: saldo, spese del mese per categoria, budget, obiettivi.
+- **Contesto**: le finanze sono il modulo più delicato dello sprint (requisiti). Un saldo, uno stipendio o un debito con un amico non devono finire nella ricerca, nelle esportazioni, nelle statistiche o in un'IA. Eppure servono somme: saldo, spese del mese per categoria, budget, obiettivi.
 - **Decisione**:
   - **Ogni importo è un blocco `secret`** ([ADR-0012](ADR-0012-blocchi-segreti.md)) al livello *protetto*, con l'opzione `format`: `importo` (zero o più) o `saldo` (può essere negativo). Si salva come `1234.50` cifrato; il Database lo normalizza prima di cifrare, quindi `12,5`, `€ 1.234,50` e `12.50` valgono come si legge.
   - **Le parole restano in chiaro**: che cosa, giorno, categoria, conto, persona. Così si cercano, si collegano e finiscono nel grafo; i numeri no.
