@@ -699,6 +699,64 @@ class FavoriteBlock(BlockType):
         return value is None or value is False
 
 
+class HistoryBlock(BlockType):
+    """A running list of dated amounts (income positive, expenses negative) that totals itself (0.3.5)."""
+
+    name = "history"
+    label = "Storico di importi"
+    description = "entrate e uscite con la data: il totale e il saldo si calcolano da soli"
+    nickname = "Cronaca"
+    nickname_source = "Erodoto, Storie: il racconto di ciò che accade, giorno dopo giorno"
+    options = {"unit": _str_option, "max_items": _int_option}
+
+    def normalize(self, value: Any, options: Dict[str, Any]) -> List[Dict[str, Any]]:
+        if not isinstance(value, list):
+            raise ValueError("serve una lista di movimenti")
+        items = []
+        for item in value:
+            if not isinstance(item, dict) or set(item) - {"day", "amount", "text"}:
+                raise ValueError("ogni movimento ha solo 'day', 'amount' e 'text'")
+            amount = item.get("amount")
+            if not is_number(amount):
+                raise ValueError("l'importo di un movimento deve essere un numero (negativo per un'uscita)")
+            text = " ".join(str(item.get("text", "")).split())
+            if len(text) > 300:
+                raise ValueError("descrizione troppo lunga (massimo 300 caratteri)")
+            entry: Dict[str, Any] = {"day": parse_day(str(item.get("day", "oggi"))), "amount": round(float(amount), 2)}
+            if text:
+                entry["text"] = text
+            items.append(entry)
+        limit = options.get("max_items", 500)
+        if len(items) > limit:
+            raise ValueError(f"troppi movimenti (massimo {limit})")
+        return sorted(items, key=lambda item: item["day"])
+
+    def parse(self, raw: str, options: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Formats: '2026-11-01 +1200 stipendio; -35,5 cena'. A missing day means today."""
+        items = []
+        for part in raw.split(";"):
+            part = part.strip()
+            if not part:
+                continue
+            match = re.match(r"^(?:(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})\s+)?([+-]?\d+(?:[.,]\d+)?)\s*(.*)$", part)
+            if not match:
+                raise ValueError(f"movimento non valido: '{part}' (esempio: 2026-11-01 -35,5 cena)")
+            day, amount, text = match.groups()
+            items.append({"day": day or "oggi", "amount": float(amount.replace(",", ".")), "text": text})
+        return self.normalize(items, options)
+
+    def to_text(self, value: Any, options: Dict[str, Any]) -> str:
+        return "; ".join(f"{item['day']} {item['amount']:+g} {item.get('text', '')}".strip() for item in value)
+
+
+def history_totals(value: Any) -> Dict[str, float]:
+    """Income, expenses (as a positive number) and balance of a history value, rounded to cents."""
+    amounts = [item["amount"] for item in value or []]
+    income = round(sum(amount for amount in amounts if amount > 0), 2)
+    expenses = round(-sum(amount for amount in amounts if amount < 0), 2)
+    return {"income": income, "expenses": expenses, "balance": round(income - expenses, 2)}
+
+
 BLOCK_TYPES: Dict[str, BlockType] = {
     block.name: block
     for block in (
@@ -717,6 +775,7 @@ BLOCK_TYPES: Dict[str, BlockType] = {
         SecretBlock(),
         MediaBlock(),
         FavoriteBlock(),
+        HistoryBlock(),
     )
 }
 
