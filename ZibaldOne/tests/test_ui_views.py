@@ -1278,3 +1278,26 @@ def test_open_lock_on_the_home_keeps_the_lock_button_on_a_phone_screen(ready: Pa
     assert [child for child in row.controls if child is not lock and getattr(child, "expand", None)], "the caption has to take the room that is left"
     click(lock)  # and one tap closes it again
     assert [item for item in walk(shell.body.content) if isinstance(item, ft.IconButton) and item.tooltip == "Sblocca per spostare i riquadri"]
+
+
+def test_lente_ideas_create_only_the_view(ready: Path) -> None:
+    from zibaldone.core import views as V
+    from zibaldone.storage.database import Store
+    from zibaldone.ui.views import lente_examples
+
+    with Store.open(ready) as store:
+        entries_before = store.count_entries("libro")
+    shell = Shell(FakePage(), ready)
+    shell.start("/viste")
+    assert "Idee per iniziare" in texts(shell.body.content)
+    click(button(shell.body.content, "Crea questa vista"))
+    with Store.open(ready) as store:
+        assert [view.name for view in V.load_views(store)] == ["Libri in corso"]
+    for idea in lente_examples.IDEAS[1:]:
+        with Store.open(ready) as store:
+            lente_examples.create_idea(store, idea)
+    with Store.open(ready) as store:
+        views = V.load_views(store)
+        assert len(views) == 8 and store.count_entries("libro") == entries_before
+        for view in views:
+            V.run_view(store, view)

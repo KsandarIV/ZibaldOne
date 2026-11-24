@@ -149,6 +149,41 @@ def _intro(ctx: AppContext) -> ft.Control:
     )
 
 
+def _ideas(ctx: AppContext, templates: List[Any]) -> ft.Control:
+    """«Idee per iniziare»: eight ready views, one per area, each made with one tap (only the view, no entries)."""
+    names = {item.slug: item.name for item in templates}
+
+    def make(idea: Any) -> Callable[[Any], None]:
+        def create(_: Any) -> None:
+            try:
+                with ctx.store() as store:
+                    lente_examples.create_idea(store, idea)
+            except (StoreError, V.ViewError, ValueError) as problem:
+                ctx.toast(str(problem), error=True)
+                return
+            ctx.data_changed()
+            ctx.toast(f"Vista «{idea[1]}» creata.")
+            ctx.refresh()
+
+        return create
+
+    rows: List[ft.Control] = []
+    for idea in lente_examples.IDEAS:
+        area_name, name, template, area, text, field, value, _ = idea
+        filters = summary(V.View("", name, names.get(template, template.replace("_", " ")) if template else "", area, text, field, value, V.RECENT))
+        rows.append(
+            ft.Row(
+                [
+                    ft.Column([W.body(f"{area_name} · {name}", size=14, weight=ft.FontWeight.W_600), W.caption(f"Filtri: {filters}")], spacing=2, expand=True),
+                    W.secondary_button("Crea questa vista", make(idea), icon="ADD"),
+                ],
+                spacing=8,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            )
+        )
+    return W.panel(ft.Column([W.body("Idee per iniziare", weight=ft.FontWeight.W_600), W.caption("Una per area. Ogni pulsante crea solo la vista: non aggiunge nessuna voce."), *rows], spacing=10))
+
+
 def build_list(ctx: AppContext, route: Route) -> ft.Control:
     with ctx.store() as store:
         ready = installed(store)
@@ -160,6 +195,7 @@ def build_list(ctx: AppContext, route: Route) -> ft.Control:
             [
                 header,
                 _intro(ctx),
+                _ideas(ctx, []),
                 W.panel(
                     ft.Column(
                         [
@@ -173,7 +209,7 @@ def build_list(ctx: AppContext, route: Route) -> ft.Control:
             ],
             ctx.wide,
         )
-    controls: List[ft.Control] = [header, _intro(ctx), ft.Row([W.primary_button("Nuova vista", lambda _: _new_dialog(ctx, templates), icon="ADD")], alignment=ft.MainAxisAlignment.END)]
+    controls: List[ft.Control] = [header, _intro(ctx), _ideas(ctx, templates), ft.Row([W.primary_button("Nuova vista", lambda _: _new_dialog(ctx, templates), icon="ADD")], alignment=ft.MainAxisAlignment.END)]
     if not views:
         controls.append(W.empty_state("Nessuna vista, per ora. Una buona prima: «i libri in corso».", "FILTER_ALT_OUTLINED"))
     for view in views:
