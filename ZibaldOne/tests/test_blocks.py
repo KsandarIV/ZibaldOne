@@ -119,3 +119,22 @@ def test_every_block_has_label_and_description() -> None:
     for name, block_type in BLOCK_TYPES.items():
         assert block_type.name == name
         assert block_type.label and block_type.description
+
+
+def test_history_block_normalizes_parses_and_totals() -> None:
+    from zibaldone.core.blocks import BLOCK_TYPES, history_totals
+
+    block = BLOCK_TYPES["history"]
+    value = block.parse("2026-11-02 -35,5 cena; 2026-11-01 +1200 stipendio", {})
+    assert [item["day"] for item in value] == ["2026-11-01", "2026-11-02"]  # kept in date order
+    assert value[1] == {"day": "2026-11-02", "amount": -35.5, "text": "cena"}
+    assert history_totals(value) == {"income": 1200.0, "expenses": 35.5, "balance": 1164.5}
+    assert history_totals(None) == {"income": 0.0, "expenses": 0.0, "balance": 0.0}
+    assert block.to_text(value, {}).startswith("2026-11-01 +1200 stipendio")
+    for bad in ("cena", "2026-13-40 5 x"):
+        with pytest.raises(ValueError):
+            block.parse(bad, {})
+    with pytest.raises(ValueError):
+        block.normalize([{"day": "2026-11-01", "amount": True}], {})
+    with pytest.raises(ValueError):
+        block.normalize([{"day": "2026-11-01", "amount": 1}] * 3, {"max_items": 2})
