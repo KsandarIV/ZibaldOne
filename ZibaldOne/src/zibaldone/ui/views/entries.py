@@ -6,6 +6,7 @@ from typing import Any, List
 import flet as ft
 
 from zibaldone.core import secrets
+from zibaldone.core.blocks import history_totals
 from zibaldone.core import views as V
 from zibaldone.core.brand import mascot_for
 from zibaldone.core.links import is_person_template
@@ -332,6 +333,18 @@ def _block_view(ctx: AppContext, block: vm.DetailBlock) -> ft.Control:
                 )
             )
         return ft.Column(rows, spacing=4)
+    if kind == "history":
+        unit = str(options.get("unit", ""))
+        total = history_totals(value)
+        rows = [
+            ft.Row(
+                [ft.Text(f"{vm.italian_date(date.fromisoformat(item['day']), weekday=False)} · {item.get('text', '')}".rstrip(" ·"), size=14, color=T.TEXT, expand=True), ft.Text(forms.history_amount(item["amount"], unit), size=14, color=T.ACCENT_2 if item["amount"] >= 0 else T.TEXT)],
+                spacing=8,
+            )
+            for item in value
+        ]
+        summary = f"Entrate {forms.format_number(total['income'])} · uscite {forms.format_number(total['expenses'])} · saldo {forms.format_number(total['balance'])}" + (f" {unit}" if unit else "")
+        return ft.Column([*rows, W.body(summary, weight=ft.FontWeight.W_600, size=14)], spacing=4)
     if kind == "scale":
         low, high = int(options.get("min", 0)), int(options.get("max", 10))
         mascot = mascot_for(block.key)

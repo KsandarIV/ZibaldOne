@@ -1325,3 +1325,31 @@ def test_collection_page_searches_and_filters(ready: Path) -> None:
     shell.ctx.refresh()
     click(button(shell.body.content, "Togli i filtri"))
     assert "Dune" in texts(shell.body.content) and "Il nome della rosa" in texts(shell.body.content)
+
+
+def test_history_block_is_added_in_the_form_and_totalled_in_the_detail(ready: Path) -> None:
+    from zibaldone.core.templates import BlockSpec, Template
+    from zibaldone.storage.database import Store
+
+    with Store.open(ready) as store:
+        store.save_template(Template(slug="cassa", name="Cassa", blocks=[BlockSpec(key="titolo", type="text", label="Nome", required=True), BlockSpec(key="movimenti", type="history", label="Movimenti", options={"unit": "€"})]).validate())
+    shell = Shell(FakePage(), ready)
+    shell.start("/scrivi/cassa")
+    fields = [item for item in walk(shell.body.content) if isinstance(item, ft.TextField)]
+    amount = next(item for item in fields if (item.hint_text or "").startswith("Importo"))
+    title = fields[0]
+    amount.value = "1200"
+    click(button(shell.body.content, "Aggiungi"))
+    amount = next(item for item in walk(shell.body.content) if isinstance(item, ft.TextField) and (item.hint_text or "").startswith("Importo"))
+    amount.value = "-35,5"
+    click(button(shell.body.content, "Aggiungi"))
+    found = texts(shell.body.content)
+    assert any("Entrate 1200 · uscite 35,5 · saldo 1164,5 €" == text for text in found)
+    title.value = "Conto"
+    title.on_change(SimpleNamespace(control=title))
+    click(button(shell.body.content, "Salva"))
+    with Store.open(ready) as store:
+        saved = store.list_entries(template="cassa")
+    assert [item["amount"] for item in saved[0].values["movimenti"]] == [1200, -35.5]
+    shell.navigate(f"/voci/{saved[0].id}")
+    assert "Entrate 1200 · uscite 35,5 · saldo 1164,5 €" in texts(shell.body.content)
