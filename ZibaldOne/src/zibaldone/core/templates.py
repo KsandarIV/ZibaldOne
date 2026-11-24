@@ -18,7 +18,10 @@ HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
 MAX_BLOCKS = 60
 
 TEMPLATE_FIELDS = {"slug", "name", "blocks", "description", "icon", "color", "category", "area", "areas", "title_block", "origin", "version"}
-BLOCK_FIELDS = {"key", "type", "label", "required", "options", "help"}
+BLOCK_FIELDS = {"key", "type", "label", "required", "options", "help", "width"}
+# 0.3.5 (KAN-84): how much of a row a block takes in the form, on a grid of six columns. "full" is the old layout.
+ROW_COLUMNS = 6
+BLOCK_WIDTHS = {"full": 6, "half": 3, "third": 2}
 ORIGIN_FIELDS = {"pack_id", "pack_version", "author"}
 
 
@@ -73,6 +76,11 @@ class BlockSpec:
     required: bool = False
     options: Dict[str, Any] = field(default_factory=dict)
     help: str = ""
+    width: str = "full"
+
+    @property
+    def columns(self) -> int:
+        return BLOCK_WIDTHS[self.width]
 
     @property
     def block_type(self) -> BlockType:
@@ -88,6 +96,8 @@ class BlockSpec:
         if not isinstance(self.options, dict):
             raise ValueError(f"le opzioni del blocco '{self.key}' devono essere un oggetto")
         self.options = self.block_type.check_options(self.options)
+        if self.width not in BLOCK_WIDTHS:
+            raise ValueError(f"la larghezza del blocco '{self.key}' è una tra: {', '.join(BLOCK_WIDTHS)}")
 
     def to_dict(self) -> Dict[str, Any]:
         data: Dict[str, Any] = {"key": self.key, "type": self.type, "label": self.label}
@@ -97,6 +107,8 @@ class BlockSpec:
             data["options"] = dict(self.options)
         if self.help:
             data["help"] = self.help
+        if self.width != "full":
+            data["width"] = self.width
         return data
 
     @classmethod
@@ -109,6 +121,7 @@ class BlockSpec:
             required=data.get("required", False),
             options=dict(data.get("options", {})) if isinstance(data.get("options", {}), dict) else data.get("options"),
             help=data.get("help", ""),
+            width=data.get("width", "full"),
         )
         spec.validate()
         return spec
@@ -163,6 +176,18 @@ class Template:
         _check_keys(self.origin, ORIGIN_FIELDS, "provenienza")
         self.origin = {key: _short_text(value, f"provenienza.{key}", 120) for key, value in self.origin.items()}
         return self
+
+    def layout_rows(self) -> List[List[BlockSpec]]:
+        """The blocks in rows, left to right: a new row starts when the next block no longer fits in six columns."""
+        rows: List[List[BlockSpec]] = []
+        used = 0
+        for block in self.blocks:
+            if not rows or used + block.columns > ROW_COLUMNS:
+                rows.append([])
+                used = 0
+            rows[-1].append(block)
+            used += block.columns
+        return rows
 
     def block(self, key: str) -> BlockSpec:
         for block in self.blocks:
