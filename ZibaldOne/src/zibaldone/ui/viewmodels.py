@@ -1215,6 +1215,22 @@ class GraphQuery:
     isolated: bool = True
     unresolved: bool = False
     depth: int = 1
+    tag: str = ""  # a tag or super tag (0.3.6): «viaggi» also keeps «viaggi/italia»
+
+
+def tag_options(tags_by_entry: Mapping[str, Sequence[str]]) -> List[Tuple[str, str]]:
+    """(tag, «viaggi/italia · 3») for every tag and super tag in use, in tree order."""
+    from zibaldone.core.tags import tag_tree
+
+    options: List[Tuple[str, str]] = []
+
+    def walk(nodes: Sequence[Any], depth: int) -> None:
+        for node in nodes:
+            options.append((node.name, f"{'  ' * depth}#{node.label} · {node.total}"))
+            walk(node.children, depth + 1)
+
+    walk(tag_tree(dict(tags_by_entry)), 0)
+    return options
 
 
 def load_graph(store: Any, query: GraphQuery, around: str = "") -> Any:
@@ -1227,6 +1243,7 @@ def load_graph(store: Any, query: GraphQuery, around: str = "") -> Any:
         depth=max(1, min(int(query.depth), 3)),
         unresolved=query.unresolved,
         isolated=query.isolated,
+        tag=query.tag or None,
     )
     return graph_from_store(store, filters)
 
