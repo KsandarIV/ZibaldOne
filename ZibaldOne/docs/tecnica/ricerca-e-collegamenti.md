@@ -47,3 +47,5 @@ Per ogni voce ZibaldOne sa quindi:
 I tag si scrivono come in Markdown/Obsidian: `#viaggi`, oppure annidati `#viaggi/italia/roma`. Il tag "padre" è un *super tag*: filtrare o cercare per `viaggi` trova anche le voci con `viaggi/italia/roma` (ma non `viaggiatori`: conta il confine della barra).
 
 Il modulo `core/tags.py` offre `normalize_tag`, `extract_tags` (tag scritti nel testo con `#`), `ancestors`, `has_tag` (corrispondenza con super tag) e `tag_tree` (albero con conteggi propri e totali). Il filtro del grafo (`GraphFilters.tag`) e il filtro delle collezioni usano già `has_tag`.
+
+I `#tag` scritti nel testo di una voce entrano nell'indice dei tag insieme a quelli del blocco Tag, e la ricerca per tag (`store.search(..., tags=[...])`) trova anche i discendenti di un super tag.
