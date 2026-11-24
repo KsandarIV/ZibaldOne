@@ -41,3 +41,9 @@ Per ogni voce ZibaldOne sa quindi:
 - `core/links.py`: collegamenti da blocchi e da `[[...]]`, nomi e soprannomi. Solo funzioni pure.
 - `storage/database.py`: tabelle, migrazione 2, `search`, `outgoing`, `backlinks`, `unlinked_mentions`, `about`.
 - Test: `tests/test_search.py`, `tests/test_links.py`, `tests/test_cli_insights.py`.
+
+## Tag e super tag (0.3.6)
+
+I tag si scrivono come in Markdown/Obsidian: `#viaggi`, oppure annidati `#viaggi/italia/roma`. Il tag "padre" è un *super tag*: filtrare o cercare per `viaggi` trova anche le voci con `viaggi/italia/roma` (ma non `viaggiatori`: conta il confine della barra).
+
+Il modulo `core/tags.py` offre `normalize_tag`, `extract_tags` (tag scritti nel testo con `#`), `ancestors`, `has_tag` (corrispondenza con super tag) e `tag_tree` (albero con conteggi propri e totali). Il filtro del grafo (`GraphFilters.tag`) e il filtro delle collezioni usano già `has_tag`.

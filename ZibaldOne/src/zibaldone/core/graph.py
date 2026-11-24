@@ -17,6 +17,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 from zibaldone.core.blocks import parse_day
 from zibaldone.core.links import LinkRecord, name_key
+from zibaldone.core.tags import has_tag, normalize_tag
 from zibaldone.core.templates import Entry, Template
 
 PALETTE = ("#B3F3F6", "#FF5500", "#FFFF00", "#FF0000", "#74EE15", "#FF007F", "#8A2BE2")
@@ -120,7 +121,7 @@ class Graph:
 
 
 def _clean_tag(tag: str) -> str:
-    return " ".join(tag.strip().lstrip("#").lower().split())
+    return normalize_tag(tag)
 
 
 def _entry_filter(entries: Sequence[Entry], filters: GraphFilters, tags_by_entry: Dict[str, List[str]]) -> List[Entry]:
@@ -133,7 +134,7 @@ def _entry_filter(entries: Sequence[Entry], filters: GraphFilters, tags_by_entry
             continue
         if (since and entry.day < since) or (until and entry.day > until):
             continue
-        if wanted_tag and wanted_tag not in tags_by_entry.get(entry.id, []):
+        if wanted_tag and not has_tag(tags_by_entry.get(entry.id, []), wanted_tag):
             continue
         chosen.append(entry)
     return chosen
