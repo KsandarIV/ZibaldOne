@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional
 import flet as ft
 
 from zibaldone.core import secrets
+from zibaldone.core.blocks import history_totals
 from zibaldone.core.brand import mascot_for
 from zibaldone.core.templates import BlockSpec, Entry, Template
 from zibaldone.storage.database import StoreError
@@ -261,6 +262,52 @@ class ChecklistEditor(FieldEditor):
         items = [dict(item) for item in self.state]
         items[index]["text"] = text or ""
         self.state = items
+
+    def remove(self, index: int) -> None:
+        self.state = [item for position, item in enumerate(self.state) if position != index]
+        self._redraw()
+
+
+class HistoryEditor(FieldEditor):
+    """Storico di importi: the movements so far, the totals, and a row to add one."""
+
+    def build(self) -> ft.Control:
+        self.unit = str(self.spec.options.get("unit", ""))
+        self.rows = ft.Column(spacing=2)
+        self.totals = W.caption("")
+        self.amount = W.text_input("", hint_text="Importo, es. 35 o -12,5", dense=True, width=170, keyboard_type=ft.KeyboardType.NUMBER)
+        self.note = W.text_input("", hint_text="Descrizione (facoltativa)", on_submit=self.add, dense=True, expand=True)
+        self._redraw(update=False)
+        add_row = ft.Row([self.amount, self.note, W.secondary_button("Aggiungi", self.add, icon="ADD")], spacing=8, wrap=True)
+        return ft.Column([self.rows, self.totals, add_row], spacing=8)
+
+    def _redraw(self, update: bool = True) -> None:
+        rows = []
+        for index, item in enumerate(self.state):
+            day = vm.italian_date(date.fromisoformat(item["day"]), weekday=False)
+            label = f"{day} · {forms.history_amount(item['amount'], self.unit)}" + (f" · {item['text']}" if item.get("text") else "")
+            rows.append(
+                ft.Row(
+                    [ft.Text(label, size=14, color=T.TEXT, expand=True), W.icon_button("DELETE_OUTLINE", lambda _, index=index: self.remove(index), "Togli")],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                )
+            )
+        self.rows.controls = rows
+        total = history_totals(self.state)
+        self.totals.value = f"Entrate {forms.format_number(total['income'])} · uscite {forms.format_number(total['expenses'])} · saldo {forms.format_number(total['balance'])}" + (f" {self.unit}" if self.unit else "") if self.state else ""
+        self.totals.visible = bool(self.state)
+        if update:
+            self.ctx.update(self.rows, self.totals)
+
+    def add(self, _: Any = None) -> None:
+        try:
+            self.state = forms.history_add(self.state, self.amount.value or "", self.note.value or "", self.ctx.now().date().isoformat())
+        except ValueError as problem:
+            self.ctx.toast(str(problem), error=True)
+            return
+        self.amount.value = self.note.value = ""
+        self.ctx.update(self.amount, self.note)
+        self._redraw()
 
     def remove(self, index: int) -> None:
         self.state = [item for position, item in enumerate(self.state) if position != index]
@@ -543,6 +590,7 @@ EDITORS: Dict[str, Callable[["EntryForm", BlockSpec], FieldEditor]] = {
     "secret": SecretEditor,
     "media": MediaEditor,
     "favorite": FavoriteEditor,
+    "history": HistoryEditor,
 }
 
 

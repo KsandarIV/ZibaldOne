@@ -48,6 +48,7 @@ HINTS: Dict[str, str] = {
     "secret": "cifrato con la tua chiave: resta fuori da ricerca, esportazioni e IA",
     "media": "foto, video, audio o documenti, fino a 100 MB l'uno",
     "favorite": "tocca il cuore per segnarlo tra i preferiti",
+    "history": "scrivi l'importo (con il meno se è un'uscita) e, se vuoi, una descrizione",
 }
 
 
@@ -119,7 +120,7 @@ def empty_state(spec: BlockSpec) -> Any:
         return []
     if kind == "progress":
         return {"status": None, "current": "", "total": format_number(spec.options.get("total"))}
-    if kind in ("link", "media"):
+    if kind in ("link", "media", "history"):
         return []
     if kind == "secret":
         return {"text": "", "sealed": None, "original": None}
@@ -149,7 +150,7 @@ def value_to_state(spec: BlockSpec, value: Any) -> Any:
         return list(value) if isinstance(value, list) else [value]
     if kind == "secret":
         return {"text": "", "sealed": str(value), "original": None}
-    if kind == "media":
+    if kind in ("media", "history"):
         return [dict(item) for item in value]
     return value  # rating, scale, choice
 
@@ -194,7 +195,7 @@ def state_to_raw(spec: BlockSpec, state: Any) -> Any:
         if total is not None:
             raw["total"] = total
         return raw
-    if kind in ("link", "media"):
+    if kind in ("link", "media", "history"):
         return list(state) or None
     if kind == "favorite":
         return True if state else None
@@ -375,6 +376,27 @@ def choice_options(spec: BlockSpec) -> List[str]:
 
 def toggle_choice(current: Optional[str], clicked: str) -> Optional[str]:
     return None if current == clicked else clicked
+
+
+# * — history (Storico di importi) —
+
+
+def history_add(items: Sequence[Mapping[str, Any]], amount_text: str, text: str, day: str) -> List[Dict[str, Any]]:
+    """Add one movement; the amount is signed (minus = expense). Raises ValueError with a message for the user."""
+    amount = parse_number_text(amount_text, "importo")
+    if amount is None:
+        raise ValueError("scrivi l'importo (con il meno se è un'uscita)")
+    entry: Dict[str, Any] = {"day": day, "amount": amount}
+    clean = " ".join((text or "").split())
+    if clean:
+        entry["text"] = clean
+    return [dict(item) for item in items] + [entry]
+
+
+def history_amount(amount: float, unit: str = "") -> str:
+    """'+1200 €', '-35,5 €'."""
+    sign = "-" if amount < 0 else "+"
+    return f"{sign}{format_number(abs(amount))}" + (f" {unit}" if unit else "")
 
 
 # * — checklist —

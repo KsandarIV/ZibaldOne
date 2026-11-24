@@ -676,6 +676,7 @@ OPTION_FIELDS: Dict[str, Tuple[OptionField, ...]] = {
     ),
     "media": (OptionField("max_items", "File al massimo", "int", "50 di base"),),
     "favorite": (),
+    "history": (OptionField("unit", "Unità", "text", "per esempio €"), OptionField("max_items", "Movimenti al massimo", "int", "500 di base")),
 }
 
 REQUIRED_OPTIONS: Dict[str, Dict[str, Any]] = {
