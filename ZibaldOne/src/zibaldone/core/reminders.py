@@ -629,6 +629,39 @@ def next_reminder(
     return None
 
 
+@dataclass(frozen=True)
+class PlannedAlarm:
+    """One reminder to register with the system ahead of time (Android alarm, scheduled task)."""
+
+    code: int  # stable request code: the same moment on the same day always gets the same number
+    at: datetime
+    reminder: Reminder
+
+
+def plan_alarms(config: ReminderConfig, now: datetime, days: int = 7) -> List[PlannedAlarm]:
+    """The reminders to schedule for the next `days` days, for a system that fires them with the app closed.
+
+    Same rules as `next_reminder` (moments, weekdays, quiet hours, window) but looking ahead:
+    whether today's entry will already be written is unknown, so the app re-plans every time it
+    opens or the settings change, and a reminder for a written moment is dropped when it fires.
+    Messages never carry entry data; milestones are not planned (the streak is unknown ahead of time).
+    """
+    now = _local(now)
+    planned: List[PlannedAlarm] = []
+    for offset in range(max(days, 0)):
+        day = now.date() + timedelta(days=offset)
+        for moment in config.active_moments(day):
+            start, end = window_of(config, moment.key, day)
+            at = start
+            if config.quiet_hours.contains(at.time()):
+                at = config.quiet_hours.ends_after(at)
+            if at < now or at >= end:
+                continue
+            code = day.toordinal() * 10 + MOMENTS.index(moment.key)
+            planned.append(PlannedAlarm(code, at, compose_reminder(moment.key, day)))
+    return sorted(planned, key=lambda alarm: alarm.at)
+
+
 # * — messages and streaks —
 
 

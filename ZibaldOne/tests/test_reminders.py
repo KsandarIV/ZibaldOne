@@ -550,3 +550,22 @@ def test_night_prompt_rotates_by_date_and_is_not_a_moment() -> None:
     assert first == night_prompt(datetime(2026, 10, 31, 4, 0))  # same day, same text
     assert len({night_prompt(datetime(2026, 11, day, 1, 0)).body for day in range(1, 5)}) == len(NIGHT_MESSAGES)
     assert first.title == "Notti insonni" and first.template == "pannychis" and "pannychis" not in MOMENTS
+
+
+def test_plan_alarms_looks_ahead_with_stable_codes() -> None:
+    from zibaldone.core.reminders import plan_alarms
+
+    config = ReminderConfig()
+    now = datetime(2026, 11, 24, 10, 0)  # martedì
+    alarms = plan_alarms(config, now, days=2)
+    # oggi restano metà giornata e sera; domani tutti e tre (la mattina 08:30 è dopo la fine delle ore silenziose 08:00)
+    assert [(a.reminder.moment, a.at.day) for a in alarms] == [
+        ("meta_giornata", 24), ("sera", 24), ("mattina", 25), ("meta_giornata", 25), ("sera", 25),
+    ]
+    assert [a.at for a in alarms] == sorted(a.at for a in alarms)
+    assert len({a.code for a in alarms}) == len(alarms)
+    assert plan_alarms(config, now, days=2) == alarms  # stesso input, stessi codici
+    assert plan_alarms(replace(config, enabled=False), now) == []
+    assert plan_alarms(config, now, days=0) == []
+    only_weekend = config.with_moment(MomentConfig("sera", weekdays=(5, 6)))
+    assert all(a.reminder.moment != "sera" for a in plan_alarms(only_weekend, now, days=2))
