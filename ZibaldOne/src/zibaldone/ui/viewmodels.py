@@ -453,6 +453,17 @@ class CollectionItem:
     bookmark: str
     favorite: bool = False  # 0.2.5
     hours: float = 0.0  # time spent, from the «ore» blocks (0.2.5)
+    photo: Optional[Dict[str, Any]] = None  # the first photo of the entry (0.3.5): the card shows it, or else the title
+
+
+@dataclass(frozen=True)
+class ShelfView:
+    """A section of a collection page: its items, and sub-sections when two blocks were chosen."""
+
+    name: str
+    items: Tuple[CollectionItem, ...]
+    children: Tuple["ShelfView", ...] = ()
+    total: int = 0
 
 
 @dataclass(frozen=True)
@@ -463,6 +474,9 @@ class CollectionGroup:
     icon: str
     color: str
     items: Tuple[CollectionItem, ...]
+    shelves: Tuple[ShelfView, ...] = ()  # filled only when the person chose sections
+    group_keys: Tuple[Tuple[str, str], ...] = ()  # (block key, label) the items can be split by
+    sort_keys: Tuple[Tuple[str, str], ...] = ()  # (key, label) the items can be ordered by
 
     @property
     def count_label(self) -> str:
@@ -540,11 +554,52 @@ def collection_item(entry: Entry, template: Template) -> CollectionItem:
         bookmark=str(entry.values.get(bookmark_spec.key, "")) if bookmark_spec else "",
         favorite=any(spec.type == "favorite" and entry.values.get(spec.key) for spec in template.blocks),
         hours=hours_of(template, entry.values),
+        photo=_first_photo(entry, template),
     )
 
 
-def build_collections(store: Any, category: str = "collezioni", filters: Optional[Mapping[str, CollectionFilter]] = None) -> List[CollectionGroup]:
-    """The collections with their items; `filters` (by template slug) keeps only the entries that satisfy them."""
+def _first_photo(entry: Entry, template: Template) -> Optional[Dict[str, Any]]:
+    from zibaldone.core.blocks import media_kind
+
+    for spec in template.blocks:
+        if spec.type == "media":
+            for item in entry.values.get(spec.key) or []:
+                if isinstance(item, dict) and media_kind(str(item.get("name", ""))) == "foto":
+                    return dict(item)
+    return None
+
+
+GROUPABLE = ("tags", "progress", "choice", "text", "favorite")
+SORT_SPECIAL = (("@title", "Titolo"), ("@rating", "Voto"), ("@recent", "Più recenti"))
+
+
+def group_options(template: Template) -> Tuple[Tuple[str, str], ...]:
+    return tuple((spec.key, spec.label) for spec in template.blocks if spec.type in GROUPABLE and spec.key != template.title_key)
+
+
+def sort_options(template: Template) -> Tuple[Tuple[str, str], ...]:
+    blocks = tuple((spec.key, spec.label) for spec in template.blocks if spec.type in ("text", "number", "date", "progress", "choice") and spec.key != template.title_key)
+    return SORT_SPECIAL + blocks
+
+
+def _shelf_view(shelf: Any, template: Template) -> ShelfView:
+    return ShelfView(
+        shelf.name,
+        tuple(collection_item(entry, template) for entry in shelf.entries),
+        tuple(_shelf_view(child, template) for child in shelf.children),
+        shelf.total,
+    )
+
+
+def build_collections(
+    store: Any,
+    category: str = "collezioni",
+    filters: Optional[Mapping[str, CollectionFilter]] = None,
+    layouts: Optional[Mapping[str, Mapping[str, Any]]] = None,
+) -> List[CollectionGroup]:
+    """The collections with their items; `filters` (by template slug) keeps only the entries that satisfy them, `layouts` splits and orders them."""
+    from zibaldone.core import collection_shelves as shelves
+
     groups = []
     for template in store.list_templates(category=category):
         entries = store.list_entries(template=template.slug)
@@ -553,8 +608,17 @@ def build_collections(store: Any, category: str = "collezioni", filters: Optiona
             entries = filter_entries(entries, template, query)
         items = [collection_item(entry, template) for entry in entries]
         items.sort(key=lambda item: (STATUS_ORDER.get(item.status, 6), _plain(item.title)))
+        views: Tuple[ShelfView, ...] = ()
+        layout = (layouts or {}).get(template.slug) or {}
+        group_by = [layout["group"]] if layout.get("group") in {key for key, _ in group_options(template)} else []
+        sort_by = [layout["sort"]] if layout.get("sort") in {key for key, _ in sort_options(template)} else []
+        if group_by or sort_by:
+            made = shelves.group_entries(entries, template, group_by, sort_by or [shelves.TITLE], bool(layout.get("desc")))
+            views = tuple(_shelf_view(shelf, template) for shelf in made)
         groups.append(
-            CollectionGroup(template.slug, template.name, template.description, template.icon, color_or(template.color), tuple(items))
+            CollectionGroup(
+                template.slug, template.name, template.description, template.icon, color_or(template.color), tuple(items), views, group_options(template), sort_options(template)
+            )
         )
     groups.sort(key=lambda group: (-len(group.items), _plain(group.name)))
     return groups

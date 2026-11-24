@@ -6,7 +6,8 @@ import flet as ft
 
 from zibaldone.core.blocks import PROGRESS_STATUSES
 from zibaldone.core.collection_filter import CollectionFilter
-from zibaldone.ui import carousel
+from zibaldone.storage import media
+from zibaldone.ui import carousel, services
 from zibaldone.ui import theme as T
 from zibaldone.ui import viewmodels as vm
 from zibaldone.ui import widgets as W
@@ -28,6 +29,22 @@ def _state(ctx: AppContext, slug: str) -> Dict[str, Any]:
 
 def _query(state: Dict[str, Any]) -> CollectionFilter:
     return CollectionFilter(text=state["text"], statuses=tuple(state["statuses"]), min_rating=GOOD_RATING if state["rating"] else None, favorites_only=state["favorites"])
+
+
+LAYOUT_KEY = "collezioni_layout"  # in the app settings: {slug: {group, sort, desc}}
+NONE = "*"  # a dropdown key for «nessuna»: an empty key does not round-trip
+
+
+def _layouts(ctx: AppContext) -> Dict[str, Any]:
+    value = services.ui_settings(ctx.folder).get(LAYOUT_KEY, {})
+    return value if isinstance(value, dict) else {}
+
+
+def _set_layout(ctx: AppContext, slug: str, **changes: Any) -> None:
+    layouts = {key: dict(value) for key, value in _layouts(ctx).items() if isinstance(value, dict)}
+    layouts.setdefault(slug, {}).update(changes)
+    services.save_ui_settings(ctx.folder, **{LAYOUT_KEY: layouts})
+    ctx.refresh_keep_scroll()
 
 
 def _queries(ctx: AppContext) -> Dict[str, CollectionFilter]:
@@ -65,7 +82,11 @@ def _filter_bar(ctx: AppContext, group: vm.CollectionGroup) -> ft.Control:
     field = W.text_input(state["text"], label="Cerca in questa raccolta", prefix_icon=ft.Icons.SEARCH, on_submit=search, on_blur=search, expand=True)
     chips: List[ft.Control] = [chip(label, key in state["statuses"], status(key)) for key, label in PROGRESS_STATUSES.items()]
     chips += [chip("Preferiti", state["favorites"], flip("favorites")), chip(f"Da {GOOD_RATING} stelle", state["rating"], flip("rating"))]
-    return ft.Column([ft.Row([field], spacing=8), ft.Row(chips, spacing=8, run_spacing=8, wrap=True)], spacing=10)
+    layout = _layouts(ctx).get(group.slug, {})
+    sections = W.dropdown([(NONE, "Nessuna")] + list(group.group_keys), layout.get("group") or NONE, label="Sezioni per", width=200, on_select=lambda e: _set_layout(ctx, group.slug, group="" if e.control.value in (None, NONE) else e.control.value))
+    order = W.dropdown([(NONE, "Di base")] + list(group.sort_keys), layout.get("sort") or NONE, label="Ordina per", width=200, on_select=lambda e: _set_layout(ctx, group.slug, sort="" if e.control.value in (None, NONE) else e.control.value))
+    reverse = W.icon_button("ARROW_DOWNWARD" if layout.get("desc") else "ARROW_UPWARD", lambda _: _set_layout(ctx, group.slug, desc=not layout.get("desc")), "Dal più alto al più basso" if layout.get("desc") else "Dal più basso al più alto")
+    return ft.Column([ft.Row([field], spacing=8), ft.Row([sections, order, reverse], spacing=8, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER), ft.Row(chips, spacing=8, run_spacing=8, wrap=True)], spacing=10)
 
 
 def _empty_after_filter(ctx: AppContext, group: vm.CollectionGroup) -> List[ft.Control]:
@@ -79,7 +100,7 @@ def _empty_after_filter(ctx: AppContext, group: vm.CollectionGroup) -> List[ft.C
 def build(ctx: AppContext, route: Route) -> ft.Control:
     info = section("collezioni")
     with ctx.store() as store:
-        groups = vm.build_collections(store, filters=_queries(ctx))
+        groups = vm.build_collections(store, filters=_queries(ctx), layouts=_layouts(ctx))
     import_button = W.secondary_button("Importa da un file", lambda _: open_import(ctx, ctx.refresh), icon="DOWNLOAD")
     controls: List[ft.Control] = [W.screen_header(info.label, info.nickname, "libri, film, serie e tutto ciò che raccogli", actions=[import_button])]
     if not groups:
@@ -143,7 +164,7 @@ def _card(ctx: AppContext, group: vm.CollectionGroup) -> ft.Control:
 def build_group(ctx: AppContext, route: Route) -> ft.Control:
     """The child page of one collection: its items, and «Aggiungi»."""
     with ctx.store() as store:
-        group = next((item for item in vm.build_collections(store, filters=_queries(ctx)) if item.slug == route.arg), None)
+        group = next((item for item in vm.build_collections(store, filters=_queries(ctx), layouts=_layouts(ctx)) if item.slug == route.arg), None)
     if group is None:
         return not_found(ctx, "Questa raccolta non esiste. Le raccolte sono i modelli della Scuola «Museion · Collezioni».")
     add = W.primary_button("Aggiungi", lambda _: ctx.go(f"/scrivi/{group.slug}"), icon="ADD")
@@ -161,8 +182,24 @@ def _group_items(ctx: AppContext, group: vm.CollectionGroup) -> List[ft.Control]
     bar = _filter_bar(ctx, group)
     if group.items:
         found = [W.caption(f"{len(group.items)} su {total} voci")] if filtering else []
+        if group.shelves:
+            return [bar, *found, *_shelves(ctx, group, group.shelves)]
         return [bar, *found, ft.ResponsiveRow([_item(ctx, group, item) for item in group.items], spacing=10, run_spacing=10)]
     return [bar, *_empty_after_filter(ctx, group)]
+
+
+def _shelves(ctx: AppContext, group: vm.CollectionGroup, shelves: Any, depth: int = 0) -> List[ft.Control]:
+    """The sections of a collection: a title with how many, then the items (or the sub-sections)."""
+    controls: List[ft.Control] = []
+    for shelf in shelves:
+        if shelf.name:
+            title = f"{shelf.name} · {shelf.total}"
+            controls.append(W.section_label(title) if depth == 0 else W.caption(title))
+        if shelf.children:
+            controls += _shelves(ctx, group, shelf.children, depth + 1)
+        elif shelf.items:
+            controls.append(ft.ResponsiveRow([_item(ctx, group, item) for item in shelf.items], spacing=10, run_spacing=10))
+    return controls
 
 
 def _chip(ctx: AppContext, text: str, entry_id: str, icon: str = "", color: str = T.ACCENT_2) -> ft.Control:
@@ -199,6 +236,11 @@ def _item(ctx: AppContext, group: vm.CollectionGroup, item: vm.CollectionItem) -
     if item.favorite:
         title = ft.Row([title, ft.Icon(ft.Icons.FAVORITE, size=16, color=T.ACCENT_2)], spacing=6)
     lines: List[ft.Control] = [title]
+    if item.photo:  # the photo when there is one; the title is always there as the caption
+        try:
+            lines.insert(0, ft.Image(src=media.read(ctx.folder, item.photo["file"]), height=160, fit=ft.BoxFit.COVER, border_radius=T.RADIUS_SMALL, cache_width=480))
+        except media.MediaError:
+            pass
     if item.subtitle:
         lines.append(W.caption(item.subtitle))
     if item.rating is not None:
