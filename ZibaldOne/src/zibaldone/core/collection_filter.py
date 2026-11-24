@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, List, Optional, Tuple
 
 from zibaldone.core.search import fold, words
+from zibaldone.core.tags import has_tag
 from zibaldone.core.templates import Entry, Template
 
 
@@ -54,7 +55,7 @@ def matches(entry: Entry, template: Template, query: CollectionFilter) -> bool:
             return False
     if query.favorites_only and not any(spec.type == "favorite" and entry.values.get(spec.key) for spec in template.blocks):
         return False
-    if query.tags and not {fold(tag) for tag in query.tags} <= _tags(entry, template):
+    if query.tags and not all(has_tag(_tags(entry, template), fold(tag)) for tag in query.tags):
         return False
     wanted = words(query.text)
     if wanted:
