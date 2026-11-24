@@ -1427,3 +1427,25 @@ def test_collection_page_splits_into_sections_and_shows_the_photo(ready: Path) -
     services.save_ui_settings(ready, **{collections.LAYOUT_KEY: {}})
     shell.ctx.refresh()
     assert "in corso · 1" not in [text.lower() for text in texts(shell.body.content)]
+
+
+def test_super_tag_filters_the_collection_and_the_graph(ready: Path) -> None:
+    from zibaldone.storage.database import Store
+    from zibaldone.ui import viewmodels as vm
+    from zibaldone.ui.views import collections
+
+    with Store.open(ready) as store:
+        tags_key = next((spec.key for spec in store.get_template("libro").blocks if spec.type == "tags"), None)
+        assert tags_key
+        store.add_entry("libro", {"titolo": "Il Gattopardo", tags_key: ["viaggi/italia/sicilia"]})
+        store.add_entry("libro", {"titolo": "Neuromante", tags_key: ["cyber"]})
+        options = vm.tag_options(store.tags_by_entry())
+    assert ("viaggi", "#viaggi · 1") in options and ("viaggi/italia/sicilia", "    #sicilia · 1") in options
+    shell = Shell(FakePage(), ready)
+    shell.start("/collezioni/libro")
+    shell.ctx.memory[collections.FILTER_KEY] = {"libro": {"text": "", "statuses": [], "favorites": False, "rating": False, "tag": "viaggi"}}
+    shell.ctx.refresh()
+    found = texts(shell.body.content)
+    assert "Il Gattopardo" in found and "Neuromante" not in found
+    shell.start("/grafo")
+    assert "Tag (anche i super tag)" in [getattr(item, "label", "") for item in walk(shell.body.content)]

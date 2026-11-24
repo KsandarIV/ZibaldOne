@@ -24,11 +24,11 @@ GOOD_RATING = 4  # «Da 4 stelle»
 
 
 def _state(ctx: AppContext, slug: str) -> Dict[str, Any]:
-    return ctx.memory.setdefault(FILTER_KEY, {}).setdefault(slug, {"text": "", "statuses": [], "favorites": False, "rating": False})
+    return ctx.memory.setdefault(FILTER_KEY, {}).setdefault(slug, {"text": "", "statuses": [], "favorites": False, "rating": False, "tag": ""})
 
 
 def _query(state: Dict[str, Any]) -> CollectionFilter:
-    return CollectionFilter(text=state["text"], statuses=tuple(state["statuses"]), min_rating=GOOD_RATING if state["rating"] else None, favorites_only=state["favorites"])
+    return CollectionFilter(text=state["text"], statuses=tuple(state["statuses"]), min_rating=GOOD_RATING if state["rating"] else None, favorites_only=state["favorites"], tags=(state.get("tag"),) if state.get("tag") else ())
 
 
 LAYOUT_KEY = "collezioni_layout"  # in the app settings: {slug: {group, sort, desc}}

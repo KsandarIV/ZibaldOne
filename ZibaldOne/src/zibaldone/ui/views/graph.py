@@ -66,6 +66,7 @@ class GraphScreen:
         try:
             with self.ctx.store() as store:
                 templates = store.list_templates()
+                tag_choices = vm.tag_options(store.tags_by_entry())
                 if self.around:
                     center_title = vm.entry_detail(store, self.around, self.ctx.now().date(), mentions=0).title
                     self.around = store.get_entry(self.around).id
@@ -87,6 +88,7 @@ class GraphScreen:
                 spacing=12,
                 run_spacing=12,
             ),
+            ft.Row([W.dropdown([(ALL, "Tutti i tag")] + tag_choices, self.query.tag or ALL, label="Tag (anche i super tag)", on_select=self.tag_changed, expand=True)]) if tag_choices else ft.Container(),
             ft.Row(
                 [
                     self._switch("Voci senza collegamenti", self.query.isolated, "isolated"),
@@ -131,6 +133,11 @@ class GraphScreen:
     def template_changed(self, event: Any) -> None:
         value = event.control.value
         self.query.template = "" if value in (None, ALL) else value
+        self.reload()
+
+    def tag_changed(self, event: Any) -> None:
+        value = event.control.value
+        self.query.tag = "" if value in (None, ALL) else value
         self.reload()
 
     def depth_changed(self, event: Any) -> None:
