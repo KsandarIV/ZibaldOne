@@ -36,6 +36,28 @@ VIEWS = (
 )
 
 
+# (area, name, template, area key, text, field, value, pack id of the template): the eight ideas, one per area
+IDEAS = (
+    ("Svago", "Libri in corso", "libro", "", "", "stato", "In corso", "zibaldone.collezioni"),
+    ("Studio", "Obiettivi di studio", "obiettivo", "studio", "", "", "", "zibaldone.aree"),
+    ("Salute", "Tutto sulla salute", "", "salute", "", "", "", ""),
+    ("Lavoro", "Da fare al lavoro", "da_fare", "lavoro", "", "", "", "zibaldone.aree"),
+    ("Famiglia", "Famiglia", "", "famiglia", "", "", "", ""),
+    ("Sociale", "Cene e uscite", "", "sociale", "cena", "", "", ""),
+    ("Finanze", "Abbonamenti", "", "finanze", "abbonamento", "", "", ""),
+    ("Personale", "Idee", "", "personale", "idea", "", "", ""),
+)
+
+
+def create_idea(store: Any, idea: Any) -> V.View:
+    """Make only the view of one idea (no entries), installing the Lente model and the pack of its template when missing."""
+    _, name, template, area, text, field, value, pack_id = idea
+    _ensure(store, V.TEMPLATE, V.PACK_NAME)
+    if pack_id:
+        _ensure(store, template, pack_id)
+    return V.save_view(store, name, template=template, area=area, text=text, field=field, value=value)
+
+
 def _ensure(store: Any, slug: str, pack_name: str) -> None:
     if store.find_template(slug) is not None:
         return
