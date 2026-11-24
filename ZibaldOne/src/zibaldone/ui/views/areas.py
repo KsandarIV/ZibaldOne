@@ -13,7 +13,7 @@ from zibaldone.ui import viewmodels as vm
 from zibaldone.ui import widgets as W
 from zibaldone.ui.context import AppContext
 from zibaldone.ui.navigation import Route
-from zibaldone.ui.views import habits
+from zibaldone.ui.views import area_ideas, habits
 from zibaldone.ui.views.common import not_found
 from zibaldone.ui.views.tiles import in_days_label
 
@@ -141,6 +141,9 @@ class AreaScreen:
             habit_block = habits.area_panel(ctx, store, self.key, ctx.now().date())
         if habit_block is not None:
             controls.append(habit_block)
+        extra = area_ideas.panel(ctx, self.key)
+        if extra is not None:
+            controls.append(extra)
         controls.append(self._todos(page))
         controls.append(self._goals(page))
         if page.people:
