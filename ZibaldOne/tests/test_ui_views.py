@@ -579,7 +579,7 @@ def test_an_area_page_offers_the_missing_pack(ready: Path) -> None:
     shell.start("/aree/finanze")
     assert any("Liceo · Aree" in text for text in texts(shell.body.content))
     click(button(shell.body.content, "Installa «Liceo · Aree»"))
-    assert "Liceo · Aree installato: 3 modelli." in shell.ctx.toasts
+    assert "Liceo · Aree installato: 4 modelli." in shell.ctx.toasts
     assert button(shell.body.content, "Check-in")
 
 

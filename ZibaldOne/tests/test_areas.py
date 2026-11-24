@@ -75,7 +75,7 @@ def test_built_in_templates_belong_to_their_area() -> None:
     by_slug = {template.slug: template for pack in packs.values() for template in pack.templates}
     assert by_slug["libro"].area == "svago" and by_slug["sport"].area == "salute" and by_slug["identita"].area == "personale"
     assert by_slug["persona"].area == "sociale" and by_slug["sera"].area == ""  # the diary spans every area
-    assert {template.slug for template in packs["aree"].templates} == {A.CHECKIN_TEMPLATE, A.GOAL_TEMPLATE, A.TODO_TEMPLATE}
+    assert {template.slug for template in packs["aree"].templates} == {A.CHECKIN_TEMPLATE, A.GOAL_TEMPLATE, A.TODO_TEMPLATE, "portale_studio"}
 
 
 def test_a_person_can_be_in_more_areas(store: Store) -> None:

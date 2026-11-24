@@ -2,7 +2,7 @@
   "format": 1,
   "id": "zibaldone.aree",
   "name": "Liceo · Aree",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "ZibaldOne",
   "license": "CC0-1.0",
   "description": "Il Liceo di Aristotele, dove la felicità (eudaimonia) è una vita che fiorisce in tutte le sue parti: il check-in di una singola area, gli obiettivi e la lista delle cose da fare di ogni area.",
@@ -12,6 +12,7 @@
     "longtext",
     "progress",
     "scale",
+    "tags",
     "text"
   ],
   "templates": [
@@ -107,6 +108,38 @@
       "icon": "CHECKLIST",
       "color": "#FFFF00",
       "category": "aree"
+    },
+    {
+      "slug": "portale_studio",
+      "name": "Portale di studio",
+      "blocks": [
+        {
+          "key": "titolo",
+          "type": "text",
+          "label": "Argomento",
+          "required": true
+        },
+        {
+          "key": "riferimenti",
+          "type": "longtext",
+          "label": "Riferimenti (un link, un file o una cartella per riga)"
+        },
+        {
+          "key": "temi",
+          "type": "tags",
+          "label": "Temi"
+        },
+        {
+          "key": "appunti",
+          "type": "longtext",
+          "label": "Appunti"
+        }
+      ],
+      "description": "Un argomento di studio con gli appunti e il portale dei suoi riferimenti: link, file sul PC, cartelle del Drive. Dal portico (stoà) dove si studiava camminando.",
+      "icon": "SCHOOL_OUTLINED",
+      "color": "#00E5FF",
+      "category": "aree",
+      "area": "studio"
     }
   ]
 }

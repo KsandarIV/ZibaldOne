@@ -53,3 +53,11 @@ Le pagine delle aree mostrano anche quello che non c'è ancora, con la versione 
 - `core/templates.py` (`area` in modello e voce, `check_area`), `storage/database.py` (migrazione 3, `entry_areas`, filtri per area).
 - `ui/views/areas.py`, `ui/viewmodels.py` (`area_cards`, `area_page`, `upcoming_rows`), `cli/area_cmd.py`, `packs/aree.zbpack.json`.
 - Test: `tests/test_areas.py`, `tests/test_ui_views.py`, `tests/test_export.py`, `tests/test_packs.py`.
+
+## Sezioni per area, prima parte (0.3.6)
+
+- **Studio**: il modello «Portale di studio» (nella Scuola «Liceo · Aree», area Studio) raccoglie un argomento con appunti e un elenco di riferimenti, uno per riga. `portal_references` (in `core/suggestions.py`) distingue link (`https://…`), file (percorsi come `C:\…`, `/…`, `~/…`) e note libere.
+- **Svago**: `leisure_mix` prende fino a cinque voci a caso dalle collezioni dell'area Svago e una sfida preimpostata («scrivi una storia con tutte e 5», «trova una canzone che le riassuma»); `pick_one` ne sceglie una sola.
+- **Sociale**: `group_activity(persone, rng)` suggerisce un'attività non scontata adatta al numero di persone, evitando quelle già proposte.
+
+Il caso arriva da un `random.Random` passato da fuori: con lo stesso seme il suggerimento è lo stesso (utile nei test). Niente modello linguistico per ora: i testi sono preimpostati.
