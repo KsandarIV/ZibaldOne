@@ -1460,3 +1460,25 @@ def test_daimon_shows_the_planned_reminders(ready: Path) -> None:
     assert any(line == "NEI PROSSIMI GIORNI" or line.lower() == "nei prossimi giorni" for line in lines)
     assert any("alle" in line and ":" in line for line in lines) or any("Nessun promemoria" in line for line in lines)
     assert any("ad app chiusa" in line for line in lines)
+
+def test_area_pages_offer_ideas_for_studio_svago_and_sociale(ready: Path) -> None:
+    from zibaldone.ui.views.areas import AreaScreen
+
+    shell = Shell(FakePage(), ready)
+    with shell.ctx.store() as store:
+        vm.install_areas_pack(store)
+        store.add_entry("portale_studio", {"titolo": "Greco", "riferimenti": "https://example.org/greco\nC:\\corsi\\greco.pdf\nripassare gli aoristi"})
+    studio = texts(AreaScreen(shell.ctx, "studio").build())
+    assert "Portali di studio" in studio and "Greco" in studio and "https://example.org/greco" in studio
+
+    svago = AreaScreen(shell.ctx, "svago")
+    control = svago.build()
+    click(button(control, "Uno a sorte"))
+    assert any("Ficciones · Biblioteca di Babele" in line for line in texts(control))
+    click(button(control, "Mescola cinque"))
+
+    sociale = AreaScreen(shell.ctx, "sociale")
+    control = sociale.build()
+    click(button(control, "Proponimi qualcosa"))
+    assert len([line for line in texts(control) if "persone" in line.lower()]) >= 1
+    assert not [line for line in texts(control) if line.startswith("Scrivi un numero")]
