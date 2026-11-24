@@ -59,3 +59,6 @@ Cose da sapere:
 - `core/blocks.py` (`RatingBlock.half`, `LongTextBlock.spoiler`, `FavoriteBlock`, date nell'avanzamento), `storage/database.py` (`_stamp_progress`, `add_entry(stamp=)`).
 - `core/importers.py` (lettura dei quattro formati e scrittura), `cli/import_cmd.py`, `ui/views/import_dialog.py`, `ui/views/collections.py`, `ui/viewmodels.py` (`hours_of`, `favorites_of`, `wishlist_of`).
 - Test: `tests/test_recreation.py`, `tests/test_ui_views.py`, `tests/test_ui_logic.py`.
+
+## Scaffali: sezioni e ordine a scelta (0.3.5)
+`core/collection_shelves.py` divide le voci di una collezione in sezioni scelte dall'utente (`group_entries(voci, modello, group_by=("generi", "autore"))`: la prima chiave fa le sezioni, la seconda le sotto-sezioni) e le ordina (`sort_entries`, con più chiavi di seguito, per esempio autore e poi titolo; chiavi speciali `@title`, `@rating`, `@recent`). Una voce con più etichette sta in ognuna delle sue sezioni; chi non ha nulla nel blocco scelto va in «Altro», sempre ultima. Il modello Libro ha ora un blocco `foto` («Copertina»), il Videogioco una «Foto» e il Capo fino a cinque foto (pacchetto Collezioni 1.3.0): chi ha la foto la mostra, gli altri il titolo.
