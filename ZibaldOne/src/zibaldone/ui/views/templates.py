@@ -15,7 +15,7 @@ from zibaldone.ui import viewmodels as vm
 from zibaldone.ui import widgets as W
 from zibaldone.ui.context import AppContext
 from zibaldone.ui.navigation import Route, section
-from zibaldone.ui.views import personalize, saved_views
+from zibaldone.ui.views import pack_file, personalize, saved_views
 
 
 GENERAL = ""  # the ninth page: templates with no area
@@ -133,6 +133,7 @@ def build_list(ctx: AppContext, route: Route) -> ft.Control:
             W.primary_button("Nuovo modello", lambda _: ctx.go("/modelli/nuovo"), icon="ADD"),
             W.secondary_button(f"{NOMENCLATURE['pack'].name} · pacchetti", lambda _: ctx.go("/scuole"), icon="SCHOOL_OUTLINED"),
             W.secondary_button("Esporta", lambda _: export_dialog(ctx), icon="DOWNLOAD", disabled=not templates),
+            W.secondary_button("Importa", lambda _: pack_file.open_import_pack(ctx, ctx.refresh), icon="UPLOAD_FILE"),
             *tools,
         ]
         head: ft.Control = W.screen_header(info.label, info.nickname, "le ricette fatte di blocchi: ogni voce nasce da un modello", actions=actions)
@@ -191,7 +192,7 @@ def export_dialog(ctx: AppContext) -> None:
             ctx.update(error)
             return
         ctx.close_dialog()
-        show_export_result(ctx, path)
+        pack_file.show_export_result(ctx, path)
 
     dialog = ft.AlertDialog(
         title="Esporta i modelli",
@@ -210,24 +211,6 @@ def export_dialog(ctx: AppContext) -> None:
         ),
         actions=[W.text_button("Annulla", ctx.close_dialog, color=T.TEXT), W.primary_button("Esporta", do_export, icon="DOWNLOAD")],
     )
-    ctx.show_dialog(dialog)
-
-
-def show_export_result(ctx: AppContext, path: Any) -> None:
-    dialog = ft.AlertDialog(
-        title="Pacchetto salvato",
-        content=ft.Column(
-            [
-                W.body("L'ho salvato nella cartella dati, sotto exports:"),
-                W.panel(W.body(str(path), selectable=True, size=13), padding=10, bgcolor=T.BG),
-                W.caption("Scegliere un'altra cartella sarà possibile in una prossima versione."),
-            ],
-            spacing=10,
-            tight=True,
-        ),
-        actions=[W.primary_button("Va bene", ctx.close_dialog)],
-    )
-    ctx.toast(f"Esportato in {path}")
     ctx.show_dialog(dialog)
 
 

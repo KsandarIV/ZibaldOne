@@ -1353,3 +1353,31 @@ def test_history_block_is_added_in_the_form_and_totalled_in_the_detail(ready: Pa
     assert [item["amount"] for item in saved[0].values["movimenti"]] == [1200, -35.5]
     shell.navigate(f"/voci/{saved[0].id}")
     assert "Entrate 1200 · uscite 35,5 · saldo 1164,5 €" in texts(shell.body.content)
+
+def test_templates_import_a_pack_file_and_offer_where_to_save_an_export(ready: Path, tmp_path: Path) -> None:
+    from zibaldone.core.packs import build_pack, write_pack_file
+    from zibaldone.core.templates import BlockSpec, Template
+
+    pack = build_pack([Template(slug="ricetta", name="Ricetta", blocks=[BlockSpec(key="titolo", type="text", label="Nome", required=True)]).validate()], pack_id="personale.ricette", name="Ricette", author="")
+    file = write_pack_file(pack, tmp_path / "ricette.zbpack.json")
+    shell = Shell(FakePage(), ready)
+    shell.start("/modelli")
+    shell.ctx.pick_files = lambda on_picked, multiple=True: on_picked([SimpleNamespace(name=file.name, path=str(file), bytes=None)])
+    click(button(shell.body.content, "Importa"))
+    dialog = shell.ctx.page.dialogs[-1]
+    assert "«Ricette»" in texts(dialog) and "Ricetta" in texts(dialog)
+    click(button(dialog, "Installa"))
+    with Store.open(ready) as store:
+        assert store.find_template("ricetta") is not None
+    # a file that is not a pack says so and installs nothing
+    bad = tmp_path / "no.zbpack.json"
+    bad.write_text("non è json", encoding="utf-8")
+    shell.ctx.pick_files = lambda on_picked, multiple=True: on_picked([SimpleNamespace(name=bad.name, path=str(bad), bytes=None)])
+    click(button(shell.body.content, "Importa"))
+    assert any("JSON" in toast for toast in shell.ctx.toasts)
+    # after an export: «Salva con nome…» hands the file to the system dialog
+    from zibaldone.ui.views import pack_file
+
+    pack_file.show_export_result(shell.ctx, file)
+    click(button(shell.ctx.page.dialogs[-1], "Salva con nome…"))
+    assert shell.ctx.saved == [file.name]
