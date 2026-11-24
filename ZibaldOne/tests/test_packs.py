@@ -171,3 +171,23 @@ def test_cli_install_base(isolated_data_dir) -> None:
     first = runner.invoke(app, ["pack", "install", "--base"])
     assert first.exit_code == 0 and first.output.startswith("Installati: diario, aree") and "theoria" in first.output, first.output
     assert "ci sono già" in runner.invoke(app, ["pack", "install", "--base"]).output
+
+
+def test_import_from_file_bytes_round_trip_and_rejections(tmp_path) -> None:
+    """The contract the UI relies on for Importa: bytes in, plan, then install; bad files give an Italian ValueError."""
+    from zibaldone.core.packs import write_pack_file
+
+    with Store.open(tmp_path / "a") as source:
+        apply_install(plan_install(find_builtin_pack("collezioni"), source), source)
+        pack = build_pack([source.get_template("libro")], "alex.letture", "Letture", author="Alex")
+    file = write_pack_file(pack, tmp_path / "letture.zbpack.json")
+    with Store.open(tmp_path / "b") as other:
+        received = load_pack_bytes(file.read_bytes())
+        plan = plan_install(received, other)
+        assert [step.action for step in plan.steps] == ["new"]
+        apply_install(plan, other)
+        assert other.get_template("libro").origin["pack_id"] == "alex.letture"
+        assert [step.action for step in plan_install(received, other).steps] == ["same"]  # importing twice is harmless
+    for bad in (b"non e' json", b'{"format": 1}', b'{"mattina": 1}', "è".encode("latin-1")):
+        with pytest.raises(ValueError):
+            load_pack_bytes(bad)
