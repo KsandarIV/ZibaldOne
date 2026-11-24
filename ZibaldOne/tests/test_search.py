@@ -276,3 +276,13 @@ def test_rebuild_indexes_is_idempotent(store) -> None:
 def test_query_object_is_accepted(store) -> None:
     entry = store.add_entry("riflessione", {"testo": "…", "titolo": "Oggetto"}, day="2026-10-01")
     assert ids(store.search(Query("oggetto", (Term(("oggetto",)),)))) == {entry.id}
+
+
+def test_super_tags_and_hashtags_in_text(store) -> None:
+    a = store.add_entry("riflessione", {"testo": "Giornata a Roma #Viaggi/Italia/Roma e basta", "titolo": "Roma"}, day="2026-09-01")
+    b = store.add_entry("riflessione", {"testo": "Solo mare", "titolo": "Mare", "etichette": ["viaggi/spagna"]}, day="2026-09-02")
+    c = store.add_entry("riflessione", {"testo": "Altro", "titolo": "Viaggiatori", "etichette": ["viaggiatori"]}, day="2026-09-03")
+    assert ids(store.search("", tags=["viaggi/italia/roma"])) == {a.id}  # il #tag nel testo è indicizzato
+    assert ids(store.search("", tags=["#Viaggi"])) == {a.id, b.id}  # il super tag trova i discendenti
+    assert ids(store.search("", tags=["viaggi/italia"])) == {a.id}
+    assert c.id not in ids(store.search("", tags=["viaggi"]))  # 'viaggiatori' non è un figlio di 'viaggi'

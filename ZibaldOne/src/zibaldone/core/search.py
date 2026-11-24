@@ -17,6 +17,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from zibaldone.core.tags import extract_tags
 from zibaldone.core.templates import Entry, Template
 
 TOKEN = re.compile(r"[^\W_]+")
@@ -183,7 +184,9 @@ def entry_document(entry: Entry, template: Template, linked_titles: Optional[Dic
                 prose.append(", ".join(titles))
         else:
             prose.append(str(value))
-    return Document(title=entry.title(template), name=name, body="\n".join(prose + extra), tags=tags)
+    body = "\n".join(prose + extra)
+    tags.extend(tag for tag in extract_tags(body) if tag not in tags)  # '#viaggi/roma' scritto nel testo
+    return Document(title=entry.title(template), name=name, body=body, tags=tags)
 
 
 def display_text(body: str) -> str:

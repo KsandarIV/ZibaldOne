@@ -42,6 +42,7 @@ from zibaldone.core.links import (
     plain_text,
 )
 from zibaldone.core.errors import StoreError
+from zibaldone.core.tags import normalize_tag
 from zibaldone.core.search import (
     ENGINE_FTS,
     ENGINE_LIKE,
@@ -54,6 +55,7 @@ from zibaldone.core.search import (
     Term,
     display_text,
     entry_document,
+    escape_like,
     fallback_score,
     make_snippet,
     parse_query,
@@ -878,10 +880,10 @@ class Store:
             clauses.append("s.entry_id IN (SELECT entry_id FROM entry_areas WHERE area = ?)")
             params.append(check_area(area))
         for tag in tags:
-            tag = " ".join(tag.strip().lstrip("#").lower().split())
-            if tag:
-                clauses.append("s.entry_id IN (SELECT entry_id FROM entry_tags WHERE tag = ?)")
-                params.append(tag)
+            tag = normalize_tag(tag)
+            if tag:  # un super tag trova anche i suoi discendenti (viaggi -> viaggi/italia)
+                clauses.append("s.entry_id IN (SELECT entry_id FROM entry_tags WHERE tag = ? OR tag LIKE ? ESCAPE '\\')")
+                params.extend([tag, escape_like(tag) + "/%"])
         if engine == ENGINE_FTS:
             rows, total = self._search_fts(parsed, clauses, params, limit)
         else:
