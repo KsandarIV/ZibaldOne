@@ -2,7 +2,7 @@
   "format": 1,
   "id": "zibaldone.collezioni",
   "name": "Museion · Collezioni",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "ZibaldOne",
   "license": "CC0-1.0",
   "description": "Come il Museo di Alessandria, la casa delle Muse e dei libri: libri, film, serie, anime, videogiochi, giochi da tavolo, sport, musica e guardaroba.",
@@ -11,6 +11,7 @@
     "choice",
     "favorite",
     "longtext",
+    "media",
     "number",
     "progress",
     "rating",
@@ -100,6 +101,14 @@
           "help": "resta nascosta nella voce finché non la apri",
           "options": {
             "spoiler": true
+          }
+        },
+        {
+          "key": "foto",
+          "type": "media",
+          "label": "Copertina",
+          "options": {
+            "max_items": 1
           }
         }
       ],
@@ -406,6 +415,14 @@
           "options": {
             "spoiler": true
           }
+        },
+        {
+          "key": "foto",
+          "type": "media",
+          "label": "Foto",
+          "options": {
+            "max_items": 1
+          }
         }
       ],
       "description": "Videogiochi, piattaforme e ore di gioco. Huizinga, Homo ludens (1938).",
@@ -648,6 +665,14 @@
           "options": {
             "max": 5,
             "half": true
+          }
+        },
+        {
+          "key": "foto",
+          "type": "media",
+          "label": "Foto",
+          "options": {
+            "max_items": 5
           }
         }
       ],
