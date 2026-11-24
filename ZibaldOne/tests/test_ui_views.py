@@ -1405,3 +1405,25 @@ def test_blocks_of_half_width_sit_side_by_side_in_the_form(ready: Path) -> None:
     changed = vm.editor_block_from_spec(blocks[0])
     changed.width = "third"
     assert vm.spec_from_editor(changed, set()).width == "third"
+
+def test_collection_page_splits_into_sections_and_shows_the_photo(ready: Path) -> None:
+    from zibaldone.storage import media
+    from zibaldone.storage.database import Store
+    from zibaldone.ui import services
+    from zibaldone.ui.views import collections
+
+    png = bytes.fromhex("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000001e221bc330000000049454e44ae426082")
+    cover = media.add_bytes(ready, "copertina.png", png)
+    with Store.open(ready) as store:
+        store.add_entry("libro", {"titolo": "Dune", "stato": {"status": "ongoing"}, "foto": [cover.to_value()]})
+        store.add_entry("libro", {"titolo": "Ubik", "stato": {"status": "completed"}})
+    services.save_ui_settings(ready, **{collections.LAYOUT_KEY: {"libro": {"group": "stato", "sort": "@title", "desc": False}}})
+    shell = Shell(FakePage(), ready)
+    shell.start("/collezioni/libro")
+    found = [text.lower() for text in texts(shell.body.content)]
+    assert "in corso · 1" in found and "completato · 1" in found
+    assert any(isinstance(item, ft.Image) for item in walk(shell.body.content))  # the cover of «Dune»
+    # no choice made: the page stays a plain list
+    services.save_ui_settings(ready, **{collections.LAYOUT_KEY: {}})
+    shell.ctx.refresh()
+    assert "in corso · 1" not in [text.lower() for text in texts(shell.body.content)]
