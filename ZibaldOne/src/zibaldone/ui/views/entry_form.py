@@ -677,8 +677,11 @@ class EntryForm:
                 padding=ft.Padding.symmetric(horizontal=16, vertical=10),
             )
         ]
-        for spec in self.template.blocks:
-            fields.append(self._field(spec))
+        for row in self.template.layout_rows():
+            if len(row) == 1:
+                fields.append(self._field(row[0]))
+            else:  # blocks side by side on a wide window; one under the other on a phone
+                fields.append(ft.ResponsiveRow([ft.Container(self._field(spec), col={"xs": 12, "md": spec.columns * 2}) for spec in row], spacing=10, run_spacing=10))
         save_label = "Salva le modifiche" if editing else "Salva"
         bottom = ft.Row(
             [W.text_button("Annulla", self.cancel, color=T.TEXT), W.primary_button(save_label, self.save, icon="CHECK")],

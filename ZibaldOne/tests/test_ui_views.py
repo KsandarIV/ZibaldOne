@@ -1381,3 +1381,27 @@ def test_templates_import_a_pack_file_and_offer_where_to_save_an_export(ready: P
     pack_file.show_export_result(shell.ctx, file)
     click(button(shell.ctx.page.dialogs[-1], "Salva con nome…"))
     assert shell.ctx.saved == [file.name]
+
+
+def test_blocks_of_half_width_sit_side_by_side_in_the_form(ready: Path) -> None:
+    from zibaldone.core.templates import BlockSpec, Template
+    from zibaldone.storage.database import Store
+    from zibaldone.ui import viewmodels as vm
+
+    blocks = [
+        BlockSpec(key="titolo", type="text", label="Nome", required=True),
+        BlockSpec(key="peso", type="number", label="Peso", width="half"),
+        BlockSpec(key="altezza", type="number", label="Altezza", width="half"),
+    ]
+    with Store.open(ready) as store:
+        store.save_template(Template(slug="misure", name="Misure", blocks=blocks).validate())
+    shell = Shell(FakePage(), ready)
+    shell.start("/scrivi/misure")
+    rows = [item for item in walk(shell.body.content) if isinstance(item, ft.ResponsiveRow) and len(item.controls) == 2 and all((c.col or {}).get("md") == 6 for c in item.controls)]
+    assert rows
+    # the editor keeps the width through a round trip
+    editor = [vm.editor_block_from_spec(spec) for spec in blocks]
+    assert [item.width for item in editor] == ["full", "half", "half"]
+    changed = vm.editor_block_from_spec(blocks[0])
+    changed.width = "third"
+    assert vm.spec_from_editor(changed, set()).width == "third"

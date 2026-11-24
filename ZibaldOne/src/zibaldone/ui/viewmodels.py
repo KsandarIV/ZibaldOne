@@ -733,6 +733,7 @@ class EditorBlock:
     required: bool = False
     options: Dict[str, str] = field(default_factory=dict)
     help: str = ""
+    width: str = "full"  # full | half | third (0.3.5)
 
     @property
     def is_new(self) -> bool:
@@ -741,6 +742,9 @@ class EditorBlock:
     @property
     def caption(self) -> str:
         return forms.type_caption(self.type)
+
+
+WIDTH_LABELS = {"full": "Tutta la riga", "half": "Metà riga", "third": "Un terzo di riga"}
 
 
 def new_editor_block(type_name: str) -> EditorBlock:
@@ -755,7 +759,7 @@ def editor_block_from_spec(spec: BlockSpec) -> EditorBlock:
     options = {name: option_to_text(fields[name].kind if name in fields else "text", value) for name, value in spec.options.items()}
     if spec.type == "link" and "multiple" not in spec.options:
         options["multiple"] = "true"  # the core's default
-    return EditorBlock(type=spec.type, label=spec.label, key=spec.key, required=spec.required, options=options, help=spec.help)
+    return EditorBlock(type=spec.type, label=spec.label, key=spec.key, required=spec.required, options=options, help=spec.help, width=spec.width)
 
 
 def unique_key(label: str, taken: Iterable[str]) -> str:
@@ -790,6 +794,7 @@ def spec_from_editor(block: EditorBlock, taken: Iterable[str]) -> BlockSpec:
         required=block.required,
         options=options,
         help=block.help,
+        width=block.width,
     )
     try:
         spec.validate()

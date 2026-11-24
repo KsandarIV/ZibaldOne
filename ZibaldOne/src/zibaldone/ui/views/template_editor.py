@@ -180,7 +180,8 @@ class TemplateEditor:
         )
         label = W.text_input(block.label, label="Etichetta *", on_change=lambda e: self._block_set(block, "label", e.control.value or ""))
         required = ft.Checkbox(label="Obbligatorio", value=block.required, active_color=T.ACCENT, on_change=lambda e: self._block_set(block, "required", bool(e.control.value)))
-        option_controls: List[ft.Control] = []
+        width = W.dropdown(list(vm.WIDTH_LABELS.items()), block.width, label="Larghezza nel modulo", on_select=lambda e: self._block_set(block, "width", e.control.value or "full"), expand=True)
+        option_controls: List[ft.Control] = [ft.Container(ft.Row([width]), col={"xs": 12, "md": 6})]
         for item in vm.OPTION_FIELDS.get(block.type, ()):
             option_controls.append(ft.Container(self._option_control(block, item), col={"xs": 12, "md": 6}))
         parts: List[ft.Control] = [header, ft.ResponsiveRow([ft.Container(label, col={"xs": 12, "md": 8}), ft.Container(required, col={"xs": 12, "md": 4}, alignment=ft.Alignment.CENTER_LEFT)], spacing=12, run_spacing=8)]
