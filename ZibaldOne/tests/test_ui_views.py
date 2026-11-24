@@ -1449,3 +1449,14 @@ def test_super_tag_filters_the_collection_and_the_graph(ready: Path) -> None:
     assert "Il Gattopardo" in found and "Neuromante" not in found
     shell.start("/grafo")
     assert "Tag (anche i super tag)" in [getattr(item, "label", "") for item in walk(shell.body.content)]
+
+
+def test_daimon_shows_the_planned_reminders(ready: Path) -> None:
+    from zibaldone.ui.views.settings import DaimonScreen
+
+    shell = Shell(FakePage(), ready)
+    screen = DaimonScreen(shell.ctx)
+    lines = texts(screen.build())
+    assert any(line == "NEI PROSSIMI GIORNI" or line.lower() == "nei prossimi giorni" for line in lines)
+    assert any("alle" in line and ":" in line for line in lines) or any("Nessun promemoria" in line for line in lines)
+    assert any("ad app chiusa" in line for line in lines)

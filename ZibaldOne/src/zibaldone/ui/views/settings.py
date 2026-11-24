@@ -214,6 +214,8 @@ class DaimonScreen:
             controls.append(self._moment_panel(moment))
         controls.append(W.section_label("Ore di silenzio"))
         controls.append(self._quiet_panel())
+        controls.append(W.section_label("Nei prossimi giorni"))
+        controls.append(self._planned())
         controls.append(self.error)
         controls.append(ft.Row([W.primary_button("Salva i promemoria", self.save, icon="CHECK")], alignment=ft.MainAxisAlignment.END))
         controls.append(W.caption("Mentre ZibaldOne è aperta, il Daimon ti avvisa con un messaggio qui dentro. Ad app chiusa, per ora, i promemoria arrivano solo sul computer, dopo `zbone remind install`."))
@@ -259,6 +261,23 @@ class DaimonScreen:
         if overview.missing_templates:
             lines.append(W.caption("Manca il modello per: " + ", ".join(MOMENT_LABELS[key] for key in overview.missing_templates) + " (Scuole · Stoa)."))
         return W.panel(ft.Column(lines or [W.body("Tutto tranquillo.", dim=True)], spacing=6))
+
+    def _planned(self) -> ft.Control:
+        now = self.ctx.now()
+        alarms, problem = services.planned_alarms(self.ctx.folder, now)
+        if problem:
+            return W.panel(W.body(f"Il piano non si legge: {problem}", dim=True))
+        today = now.date()
+        lines: List[ft.Control] = []
+        for alarm in alarms[:6]:
+            day = "oggi" if alarm.at.date() == today else ("domani" if alarm.at.date() == today + timedelta(days=1) else vm.italian_date(alarm.at.date()))
+            lines.append(W.body(f"{day} alle {alarm.at:%H:%M}: {alarm.reminder.title}", size=14))
+        if not lines:
+            lines.append(W.body("Nessun promemoria in programma.", dim=True))
+        elif len(alarms) > 6:
+            lines.append(W.caption(f"e altri {len(alarms) - 6} nei giorni dopo"))
+        lines.append(W.caption("Il piano si aggiorna quando apri ZibaldOne o cambi le impostazioni. Sul telefono, ad app chiusa, i promemoria non partono ancora da soli."))
+        return W.panel(ft.Column(lines, spacing=6))
 
     def _moment_panel(self, moment: vm.MomentForm) -> ft.Control:
         days_row = ft.Row(spacing=6, run_spacing=6, wrap=True)
