@@ -16,6 +16,7 @@ from zibaldone.core import areas as eudaimonia
 from zibaldone.core import people as agora
 from zibaldone.core import relations as legami
 from zibaldone.core.blocks import BLOCK_TYPES, PROGRESS_STATUSES, is_number
+from zibaldone.core.collection_filter import CollectionFilter, filter_entries
 from zibaldone.core.brand import AREAS, MASCOTS, Mascot, Quote, mascot_for, quote_of_the_day
 from zibaldone.core.packs import InstallPlan, Pack, build_pack, write_pack_file
 from zibaldone.core.stats import long_date
@@ -542,10 +543,15 @@ def collection_item(entry: Entry, template: Template) -> CollectionItem:
     )
 
 
-def build_collections(store: Any, category: str = "collezioni") -> List[CollectionGroup]:
+def build_collections(store: Any, category: str = "collezioni", filters: Optional[Mapping[str, CollectionFilter]] = None) -> List[CollectionGroup]:
+    """The collections with their items; `filters` (by template slug) keeps only the entries that satisfy them."""
     groups = []
     for template in store.list_templates(category=category):
-        items = [collection_item(entry, template) for entry in store.list_entries(template=template.slug)]
+        entries = store.list_entries(template=template.slug)
+        query = (filters or {}).get(template.slug)
+        if query is not None and query.active:
+            entries = filter_entries(entries, template, query)
+        items = [collection_item(entry, template) for entry in entries]
         items.sort(key=lambda item: (STATUS_ORDER.get(item.status, 6), _plain(item.title)))
         groups.append(
             CollectionGroup(template.slug, template.name, template.description, template.icon, color_or(template.color), tuple(items))

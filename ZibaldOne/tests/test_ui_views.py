@@ -1301,3 +1301,27 @@ def test_lente_ideas_create_only_the_view(ready: Path) -> None:
         assert len(views) == 8 and store.count_entries("libro") == entries_before
         for view in views:
             V.run_view(store, view)
+
+
+def test_collection_page_searches_and_filters(ready: Path) -> None:
+    from zibaldone.storage.database import Store
+    from zibaldone.ui.views import collections
+
+    with Store.open(ready) as store:
+        store.add_entry("libro", {"titolo": "Dune", "autore": "Frank Herbert", "stato": {"status": "ongoing"}, "preferito": True})
+        store.add_entry("libro", {"titolo": "Il nome della rosa", "autore": "Umberto Eco", "stato": {"status": "completed"}})
+    shell = Shell(FakePage(), ready)
+    shell.start("/collezioni/libro")
+    assert {"Dune", "Il nome della rosa"} <= set(texts(shell.body.content))
+    shell.ctx.memory[collections.FILTER_KEY] = {"libro": {"text": "eco", "statuses": [], "favorites": False, "rating": False}}
+    shell.ctx.refresh()
+    found = texts(shell.body.content)
+    assert "Il nome della rosa" in found and "Dune" not in found and "1 su 3 voci" in found
+    shell.ctx.memory[collections.FILTER_KEY] = {"libro": {"text": "", "statuses": [], "favorites": True, "rating": False}}
+    shell.ctx.refresh()
+    found = texts(shell.body.content)
+    assert "Dune" in found and "Il nome della rosa" not in found
+    shell.ctx.memory[collections.FILTER_KEY] = {"libro": {"text": "zzz", "statuses": [], "favorites": False, "rating": False}}
+    shell.ctx.refresh()
+    click(button(shell.body.content, "Togli i filtri"))
+    assert "Dune" in texts(shell.body.content) and "Il nome della rosa" in texts(shell.body.content)
