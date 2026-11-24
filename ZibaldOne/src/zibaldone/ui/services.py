@@ -502,6 +502,17 @@ def reminder_config(folder: Path) -> Tuple[Any, str]:
         return None, str(error)
 
 
+def planned_alarms(folder: Path, now: datetime, days: int = 7) -> Tuple[List[Any], str]:
+    """(upcoming planned reminders, error message): what would be scheduled with the app closed."""
+    try:
+        from zibaldone.core.reminders import plan_alarms
+        from zibaldone.storage.reminder_log import load_reminder_config
+
+        return plan_alarms(load_reminder_config(folder), now, days), ""
+    except Exception as error:
+        return [], str(error)
+
+
 def reminder_overview(folder: Path, now: datetime) -> Tuple[Any, str]:
     try:
         from zibaldone.notify.service import reminder_overview as overview
