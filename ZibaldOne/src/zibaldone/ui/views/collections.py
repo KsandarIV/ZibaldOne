@@ -1,9 +1,11 @@
 """Collezioni · Museion: books, films, series … as cards with progress and stars."""
 
-from typing import Any, List
+from typing import Any, Dict, List
 
 import flet as ft
 
+from zibaldone.core.blocks import PROGRESS_STATUSES
+from zibaldone.core.collection_filter import CollectionFilter
 from zibaldone.ui import carousel
 from zibaldone.ui import theme as T
 from zibaldone.ui import viewmodels as vm
@@ -16,10 +18,68 @@ from zibaldone.ui.views.import_dialog import open_import
 ALL = ""  # the first page: every collection as cards
 
 
+FILTER_KEY = "collezioni_filtri"  # screen state: {slug: {text, statuses, favorites, rating}}
+GOOD_RATING = 4  # «Da 4 stelle»
+
+
+def _state(ctx: AppContext, slug: str) -> Dict[str, Any]:
+    return ctx.memory.setdefault(FILTER_KEY, {}).setdefault(slug, {"text": "", "statuses": [], "favorites": False, "rating": False})
+
+
+def _query(state: Dict[str, Any]) -> CollectionFilter:
+    return CollectionFilter(text=state["text"], statuses=tuple(state["statuses"]), min_rating=GOOD_RATING if state["rating"] else None, favorites_only=state["favorites"])
+
+
+def _queries(ctx: AppContext) -> Dict[str, CollectionFilter]:
+    return {slug: _query(state) for slug, state in ctx.memory.get(FILTER_KEY, {}).items()}
+
+
+def _filter_bar(ctx: AppContext, group: vm.CollectionGroup) -> ft.Control:
+    """Search box and filters of one collection: the words, the progress, the favourites, the best rated."""
+    state = _state(ctx, group.slug)
+
+    def apply(_: Any = None) -> None:
+        ctx.refresh_keep_scroll()
+
+    def search(event: Any) -> None:
+        state["text"] = event.control.value or ""
+        apply()
+
+    def chip(label: str, selected: bool, toggle: Any) -> ft.Control:
+        return ft.Chip(
+            label=ft.Text(label, size=14, color=T.TEXT),
+            selected=selected,
+            show_checkmark=False,
+            selected_color=W.fade(T.ACCENT, 0.24),
+            bgcolor=T.BG,
+            border_side=ft.BorderSide(1, T.ACCENT if selected else T.BORDER),
+            on_select=lambda _: (toggle(), apply()),
+        )
+
+    def flip(key: str) -> Any:
+        return lambda: state.__setitem__(key, not state[key])
+
+    def status(key: str) -> Any:
+        return lambda: state["statuses"].remove(key) if key in state["statuses"] else state["statuses"].append(key)
+
+    field = W.text_input(state["text"], label="Cerca in questa raccolta", prefix_icon=ft.Icons.SEARCH, on_submit=search, on_blur=search, expand=True)
+    chips: List[ft.Control] = [chip(label, key in state["statuses"], status(key)) for key, label in PROGRESS_STATUSES.items()]
+    chips += [chip("Preferiti", state["favorites"], flip("favorites")), chip(f"Da {GOOD_RATING} stelle", state["rating"], flip("rating"))]
+    return ft.Column([ft.Row([field], spacing=8), ft.Row(chips, spacing=8, run_spacing=8, wrap=True)], spacing=10)
+
+
+def _empty_after_filter(ctx: AppContext, group: vm.CollectionGroup) -> List[ft.Control]:
+    def clear(_: Any) -> None:
+        ctx.memory.get(FILTER_KEY, {}).pop(group.slug, None)
+        ctx.refresh_keep_scroll()
+
+    return [W.empty_state("Nessuna voce corrisponde ai filtri.", "FILTER_ALT_OFF", W.secondary_button("Togli i filtri", clear, icon="CLOSE"))]
+
+
 def build(ctx: AppContext, route: Route) -> ft.Control:
     info = section("collezioni")
     with ctx.store() as store:
-        groups = vm.build_collections(store)
+        groups = vm.build_collections(store, filters=_queries(ctx))
     import_button = W.secondary_button("Importa da un file", lambda _: open_import(ctx, ctx.refresh), icon="DOWNLOAD")
     controls: List[ft.Control] = [W.screen_header(info.label, info.nickname, "libri, film, serie e tutto ciò che raccogli", actions=[import_button])]
     if not groups:
@@ -54,7 +114,8 @@ def build(ctx: AppContext, route: Route) -> ft.Control:
         controls[0] = W.screen_header(shown.name, "Museion", shown.description or shown.count_label, actions=[W.primary_button("Aggiungi", lambda _: ctx.go(f"/scrivi/{shown.slug}"), icon="ADD"), import_button])
         controls += _group_items(ctx, shown)
     else:
-        controls += _overview(ctx, groups)
+        with ctx.store() as store:
+            controls += _overview(ctx, vm.build_collections(store))  # the overview never uses the filters of a single collection
         controls.append(W.section_label("Le raccolte"))
         controls.append(ft.ResponsiveRow([_card(ctx, group) for group in groups], spacing=12, run_spacing=12))
     color = shown.color if shown is not None else T.ACCENT
@@ -82,7 +143,7 @@ def _card(ctx: AppContext, group: vm.CollectionGroup) -> ft.Control:
 def build_group(ctx: AppContext, route: Route) -> ft.Control:
     """The child page of one collection: its items, and «Aggiungi»."""
     with ctx.store() as store:
-        group = next((item for item in vm.build_collections(store) if item.slug == route.arg), None)
+        group = next((item for item in vm.build_collections(store, filters=_queries(ctx)) if item.slug == route.arg), None)
     if group is None:
         return not_found(ctx, "Questa raccolta non esiste. Le raccolte sono i modelli della Scuola «Museion · Collezioni».")
     add = W.primary_button("Aggiungi", lambda _: ctx.go(f"/scrivi/{group.slug}"), icon="ADD")
@@ -92,9 +153,16 @@ def build_group(ctx: AppContext, route: Route) -> ft.Control:
 
 
 def _group_items(ctx: AppContext, group: vm.CollectionGroup) -> List[ft.Control]:
+    filtering = _query(_state(ctx, group.slug)).active
+    with ctx.store() as store:
+        total = store.count_entries(group.slug)
+    if total == 0:
+        return [W.empty_state("Questa raccolta è ancora vuota. Tocca «Aggiungi» per la prima voce.", group.icon)]
+    bar = _filter_bar(ctx, group)
     if group.items:
-        return [ft.ResponsiveRow([_item(ctx, group, item) for item in group.items], spacing=10, run_spacing=10)]
-    return [W.empty_state("Questa raccolta è ancora vuota. Tocca «Aggiungi» per la prima voce.", group.icon)]
+        found = [W.caption(f"{len(group.items)} su {total} voci")] if filtering else []
+        return [bar, *found, ft.ResponsiveRow([_item(ctx, group, item) for item in group.items], spacing=10, run_spacing=10)]
+    return [bar, *_empty_after_filter(ctx, group)]
 
 
 def _chip(ctx: AppContext, text: str, entry_id: str, icon: str = "", color: str = T.ACCENT_2) -> ft.Control:
