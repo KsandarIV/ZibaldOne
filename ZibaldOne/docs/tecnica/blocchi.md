@@ -30,6 +30,9 @@ Un **blocco** è un tipo di campo con le sue regole. Ogni modello è una lista o
 - `media` salva solo i nomi dei file (`file`, `name`, `size`): i file stanno nella cartella `media/` e nei backup ([gli allegati](allegati.md)).
 - `link` salva gli id delle voci collegate. Dalla v0.1.2 ogni collegamento (anche `[[Titolo]]` in un testo) è nella tabella `links`: chi cita chi, "tutto su Marco" ([ricerca e collegamenti](ricerca-e-collegamenti.md)); dalla 0.1.3 diventa il grafo.
 
+## La griglia dei blocchi (dalla 0.3.5)
+Ogni blocco di un modello ha una `width` (larghezza): `full` (tutta la riga, il comportamento di sempre e quello di base, non si scrive nel file), `half` (metà) o `third` (un terzo). La riga ha sei colonne; i blocchi si dispongono da sinistra a destra e una nuova riga comincia quando il blocco successivo non ci sta più (`Template.layout_rows()`). Sul telefono l'interfaccia può mettere tutto a tutta larghezza.
+
 ## Aggiungere un tipo nuovo
 1. Una classe in `blocks.py` che estende `BlockType`, con `name`, `label`, `description`, `options` e i metodi `normalize`, `parse`, `to_text`.
 2. Registrarla in `BLOCK_TYPES`.

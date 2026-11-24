@@ -82,3 +82,22 @@ def test_a_template_in_several_areas() -> None:
     template = Template.from_dict({"slug": "x", "name": "X", "blocks": [{"key": "t", "type": "text", "label": "T"}], "area": "salute", "areas": ["svago", "salute", "svago"]})
     assert template.all_areas() == ["salute", "svago"]
     assert Template.from_dict(template.to_dict()).areas == ["svago"]
+
+
+def test_block_width_grid_rows_and_round_trip() -> None:
+    from zibaldone.core.templates import BlockSpec, Template
+
+    blocks = [
+        BlockSpec("a", "text", "A", width="half"),
+        BlockSpec("b", "text", "B", width="half"),
+        BlockSpec("c", "text", "C", width="third"),
+        BlockSpec("d", "text", "D"),
+        BlockSpec("e", "text", "E", width="third"),
+    ]
+    template = Template("griglia", "Griglia", blocks).validate()
+    assert [[block.key for block in row] for row in template.layout_rows()] == [["a", "b"], ["c"], ["d"], ["e"]]
+    data = template.to_dict()
+    assert "width" not in data["blocks"][3] and data["blocks"][0]["width"] == "half"  # full is the default and stays out of the file
+    assert Template.from_dict(data).blocks[2].width == "third"
+    with pytest.raises(ValueError):
+        BlockSpec("x", "text", "X", width="enorme").validate()
