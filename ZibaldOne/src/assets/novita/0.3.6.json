@@ -1,0 +1,31 @@
+{
+  "versione": "0.3.6",
+  "data": "2026-11-25",
+  "titolo": "Idee in Viste, filtri nelle raccolte e tag",
+  "voci": [
+    {
+      "tipo": "nuovo",
+      "testo": "In Viste trovi «Idee per iniziare»: otto viste già pensate, una per area. Con un tocco su «Crea questa vista» la vista è pronta, senza voci finte."
+    },
+    {
+      "tipo": "nuovo",
+      "testo": "In ogni raccolta (libri, film, serie…) c'è una barra di ricerca e dei filtri: stato, preferiti, voti da 4 stelle. «Togli i filtri» li azzera."
+    },
+    {
+      "tipo": "nuovo",
+      "testo": "Nuovo blocco \"intelligente\" «Storico di importi»: scrivi entrate e uscite con la data e l'app calcola da sola entrate, uscite e saldo."
+    },
+    {
+      "tipo": "nuovo",
+      "testo": "Puoi importare un pacchetto di modelli ricevuto: in Modelli tocca «Importa», scegli il file e vedi cosa verrà aggiunto prima di confermare."
+    },
+    {
+      "tipo": "migliorato",
+      "testo": "Dopo aver esportato i tuoi modelli puoi scegliere dove salvare il file e, sul telefono, condividerlo subito."
+    },
+    {
+      "tipo": "nuovo",
+      "testo": "Nel grafo e nelle raccolte puoi filtrare per tag. Scegliendo un tag «padre» (per esempio viaggi) vedi anche quello che hai messo sotto di lui (viaggi/italia)."
+    }
+  ]
+}
