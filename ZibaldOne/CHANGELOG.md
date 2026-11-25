@@ -4,6 +4,17 @@ Tutte le modifiche rilevanti di ZibaldOne. Formato ispirato a [Keep a Changelog]
 
 ## [Unreleased]
 
+## [0.3.6] — 2026-11-25
+Release unica che raccoglie il lavoro delle versioni 0.3.4, 0.3.5 e 0.3.6 (nessuna release intermedia).
+### Aggiunto
+- Lente: otto idee pronte, una per area (KAN-81).
+- Collezioni: ricerca e filtri dentro una raccolta (KAN-78); sezioni e ordine a scelta (KAN-80); foto sulle schede di libri, videogiochi e capi (KAN-79).
+- Blocco «Storico di importi» con entrate, uscite e saldo (KAN-83); larghezza dei blocchi: intera, metà o un terzo (KAN-84).
+- Modelli: importare un pacchetto da file (KAN-77); salvare o condividere l'esportazione (KAN-76).
+- Tag annidati e super tag, con filtro nel grafo e nelle collezioni; i #tag scritti nel testo entrano nell'indice (KAN-85).
+- Promemoria: piano dei prossimi 7 giorni e schermata «Nei prossimi giorni» in Daimon (KAN-39). I promemoria Android ad app chiusa restano per la 0.3.9.
+- Aree Studio, Svago e Sociale: portale di studio, mix di svago, attività di gruppo (KAN-86).
+
 ## [0.3.3.4] — 2026-11-22
 Mini patch: fix del lucchetto in home.
 ### Corretto
