@@ -1,7 +1,7 @@
 {
   "versione": "0.3.6",
   "data": "2026-11-25",
-  "titolo": "Modelli, collezioni, tag e idee nelle aree",
+  "titolo": "Idee in Viste, filtri nelle raccolte e tag",
   "voci": [
     {
       "tipo": "nuovo",
@@ -13,7 +13,7 @@
     },
     {
       "tipo": "nuovo",
-      "testo": "Nuovo blocco «Storico di importi»: scrivi entrate e uscite con la data e l'app calcola da sola entrate, uscite e saldo."
+      "testo": "Nuovo blocco \"intelligente\" «Storico di importi»: scrivi entrate e uscite con la data e l'app calcola da sola entrate, uscite e saldo."
     },
     {
       "tipo": "nuovo",
@@ -25,27 +25,7 @@
     },
     {
       "tipo": "nuovo",
-      "testo": "Nell'editor dei modelli ogni blocco ha una larghezza (tutta la riga, metà o un terzo): sul computer i campi stanno affiancati, sul telefono uno sotto l'altro."
-    },
-    {
-      "tipo": "nuovo",
-      "testo": "In ogni raccolta puoi dividere le voci in sezioni (per genere, stato, piattaforma…) e scegliere l'ordine; l'app ricorda la scelta."
-    },
-    {
-      "tipo": "nuovo",
-      "testo": "Libri, videogiochi e capi hanno la foto: se c'è si vede sulla scheda, altrimenti resta il titolo."
-    },
-    {
-      "tipo": "nuovo",
       "testo": "Nel grafo e nelle raccolte puoi filtrare per tag. Scegliendo un tag «padre» (per esempio viaggi) vedi anche quello che hai messo sotto di lui (viaggi/italia)."
-    },
-    {
-      "tipo": "nuovo",
-      "testo": "In Impostazioni → Daimon, «Nei prossimi giorni» mostra i promemoria in arrivo. Sul telefono, ad app chiusa, i promemoria non partono ancora da soli."
-    },
-    {
-      "tipo": "nuovo",
-      "testo": "Nelle aree Studio, Svago e Sociale trovi idee pronte: i riferimenti dei tuoi portali di studio, un titolo (o cinque con una sfida) pescato dalle tue collezioni, e un'attività da fare insieme in base a quante persone siete."
     }
   ]
 }
